@@ -119,15 +119,17 @@ private struct ParcelRow: View {
                 Text(parcel.titleText)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(parcel.currentStatus)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text(parcel.dateText)
+                    .font(.footnote.monospacedDigit())
+                    .foregroundStyle(.tertiary)
             }
-            Spacer(minLength: 8)
-            Text(parcel.dateText)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }
