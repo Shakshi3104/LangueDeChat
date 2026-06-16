@@ -8,6 +8,7 @@ struct ParcelDetailView: View {
     @Environment(\.openURL) private var openURL
     let parcel: TrackedParcel
     @State private var isRefreshing = false
+    @State private var showingEdit = false
 
     var body: some View {
         ScrollView {
@@ -33,6 +34,9 @@ struct ParcelDetailView: View {
                     Image(systemName: "safari")
                 }
                 Menu {
+                    Button { showingEdit = true } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
                     Button { Task { await refresh() } } label: {
                         Label("Refresh", systemImage: "arrow.clockwise")
                     }
@@ -46,6 +50,9 @@ struct ParcelDetailView: View {
                     Image(systemName: "ellipsis")
                 }
             }
+        }
+        .sheet(isPresented: $showingEdit) {
+            EditParcelView(parcel: parcel)
         }
         .task {
             await refresh()
