@@ -1,0 +1,24 @@
+{
+  "originHash" : "f69b1ef7f2f7b6b58edc566b038801b7756b985732ce72af308cf2d360c1f0fa",
+  "pins" : [
+    {
+      "identity" : "swiftsoup",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/scinfu/SwiftSoup.git",
+      "state" : {
+        "revision" : "49dcadd93161f4a44b4994d3a3e8de9f085aface",
+        "version" : "2.13.5"
+      }
+    },
+    {
+      "identity" : "tsuisekit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Shakshi3104/TsuiseKit.git",
+      "state" : {
+        "revision" : "b6712b5e00fc9e19bd5e89317b53f5d02c7ef0b5",
+        "version" : "0.1.1"
+      }
+    }
+  ],
+  "version" : 3
+}
