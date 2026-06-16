@@ -1,0 +1,153 @@
+import SwiftUI
+import SwiftData
+import TsuiseKit
+
+enum ParcelFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case inProgress = "In Progress"
+    case delivered = "Delivered"
+
+    var id: Self { self }
+}
+
+struct ParcelListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \TrackedParcel.addedAt, order: .reverse) private var parcels: [TrackedParcel]
+    @State private var showingAdd = false
+    @State private var isRefreshing = false
+    @State private var filter: ParcelFilter = .all
+
+    private var filteredParcels: [TrackedParcel] {
+        switch filter {
+        case .all:        parcels
+        case .inProgress: parcels.filter { !$0.isDelivered }
+        case .delivered:  parcels.filter { $0.isDelivered }
+        }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(filteredParcels) { parcel in
+                    NavigationLink(value: parcel) {
+                        ParcelRow(parcel: parcel)
+                    }
+                }
+                .onDelete(perform: delete)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .refreshable {
+            await refreshAll()
+        }
+        .overlay {
+            if parcels.isEmpty {
+                ContentUnavailableView(
+                    "No parcels yet",
+                    systemImage: "shippingbox",
+                    description: Text("Tap + to track a new parcel.")
+                )
+            } else if filteredParcels.isEmpty {
+                ContentUnavailableView(
+                    "No matches",
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    description: Text("No parcels match this filter.")
+                )
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Filter", selection: $filter) {
+                        ForEach(ParcelFilter.allCases) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                } label: {
+                    Image(systemName: filter == .all
+                        ? "line.3.horizontal.decrease.circle"
+                        : "line.3.horizontal.decrease.circle.fill")
+                }
+            }
+        }
+        .navigationTitle("Deliveries")
+        .navigationDestination(for: TrackedParcel.self) { parcel in
+            ParcelDetailView(parcel: parcel)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                showingAdd = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2.weight(.bold))
+                    .frame(width: 56, height: 56)
+                    .background(Color.accentColor, in: Circle())
+                    .foregroundColor(.white)
+            }
+            .padding(.trailing, 24)
+            .padding(.bottom, 16)
+        }
+        .sheet(isPresented: $showingAdd) {
+            AddParcelView()
+        }
+        .task {
+            await refreshAll()
+        }
+    }
+
+    private func refreshAll() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+        await ParcelRefresher.shared.refreshAll(in: modelContext)
+    }
+
+    private func delete(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(filteredParcels[index])
+        }
+    }
+}
+
+private struct ParcelRow: View {
+    let parcel: TrackedParcel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            thumbnail
+            VStack(alignment: .leading, spacing: 4) {
+                Text(parcel.titleText)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                Text(parcel.currentStatus)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            Text(parcel.dateText)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var thumbnail: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(Color.accentColor.opacity(0.18))
+            .frame(width: 56, height: 56)
+            .overlay(
+                Image(systemName: iconName)
+                    .font(.system(size: 26, weight: .medium))
+                    .foregroundColor(.accentColor)
+            )
+    }
+
+    private var iconName: String {
+        switch parcel.carrier {
+        case .japanPost: "shippingbox.fill"
+        case .yamato:    "truck.box.fill"
+        case .sagawa:    "box.truck.fill"
+        }
+    }
+}
