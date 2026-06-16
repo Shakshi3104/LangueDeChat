@@ -2,13 +2,9 @@
 
 A small iOS app to track Japanese parcels — **Japan Post (日本郵便)**, **Yamato Transport (クロネコヤマト)**, and **Sagawa Express (佐川急便)** — on a single screen.
 
-Built on top of [TsuiseKit](https://github.com/Shakshi3104/TsuiseKit), a Swift package that scrapes each carrier's public tracking page.
-
-## Why
-
-I wanted a single SwiftUI-native screen for all my Japanese carrier deliveries, with no per-shipment cap and no third-party tracking API in the loop.
-
 The name *Langue de chat* nods to Kuronekoyamato → cat → 猫の舌 → ラング・ド・シャ. The accent color is a wink at the Yokumoku **Cigare** tin (`#03C2FE`).
+
+Built on top of [TsuiseKit](https://github.com/Shakshi3104/TsuiseKit), a Swift package that scrapes each carrier's public tracking page.
 
 ## Features
 
