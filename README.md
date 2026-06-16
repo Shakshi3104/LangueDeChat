@@ -6,7 +6,7 @@ Built on top of [TsuiseKit](https://github.com/Shakshi3104/TsuiseKit), a Swift p
 
 ## Why
 
-[Parcel](https://parcelapp.net/) caps its free tier at 3 active shipments, and the alternatives I tried weren't SwiftUI-native. So I built one for myself.
+I wanted a single SwiftUI-native screen for all my Japanese carrier deliveries, with no per-shipment cap and no third-party tracking API in the loop.
 
 The name *Langue de chat* nods to Kuronekoyamato → cat → 猫の舌 → ラング・ド・シャ. The accent color is a wink at the Yokumoku **Cigare** tin (`#03C2FE`).
 
