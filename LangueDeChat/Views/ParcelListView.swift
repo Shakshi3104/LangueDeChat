@@ -16,6 +16,7 @@ struct ParcelListView: View {
     @State private var showingAdd = false
     @State private var isRefreshing = false
     @State private var filter: ParcelFilter = .all
+    @State private var parcelToDelete: TrackedParcel?
 
     private var filteredParcels: [TrackedParcel] {
         switch filter {
@@ -32,8 +33,14 @@ struct ParcelListView: View {
                     NavigationLink(value: parcel) {
                         ParcelRow(parcel: parcel)
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            parcelToDelete = parcel
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
-                .onDelete(perform: delete)
             }
         }
         .listStyle(.insetGrouped)
@@ -90,6 +97,21 @@ struct ParcelListView: View {
         .sheet(isPresented: $showingAdd) {
             AddParcelView()
         }
+        .alert(
+            "Delete this parcel?",
+            isPresented: Binding(
+                get: { parcelToDelete != nil },
+                set: { if !$0 { parcelToDelete = nil } }
+            ),
+            presenting: parcelToDelete
+        ) { parcel in
+            Button("Delete", role: .destructive) {
+                modelContext.delete(parcel)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { parcel in
+            Text("\(parcel.titleText) and its tracking history will be removed from this device.")
+        }
         .task {
             await refreshAll()
         }
@@ -100,12 +122,6 @@ struct ParcelListView: View {
         isRefreshing = true
         defer { isRefreshing = false }
         await ParcelRefresher.shared.refreshAll(in: modelContext)
-    }
-
-    private func delete(at offsets: IndexSet) {
-        for index in offsets {
-            modelContext.delete(filteredParcels[index])
-        }
     }
 }
 

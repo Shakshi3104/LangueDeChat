@@ -9,6 +9,7 @@ struct ParcelDetailView: View {
     let parcel: TrackedParcel
     @State private var isRefreshing = false
     @State private var showingEdit = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         ScrollView {
@@ -41,8 +42,7 @@ struct ParcelDetailView: View {
                         Label("Refresh", systemImage: "arrow.clockwise")
                     }
                     Button(role: .destructive) {
-                        modelContext.delete(parcel)
-                        dismiss()
+                        showingDeleteConfirmation = true
                     } label: {
                         Label("Delete", systemImage: "trash")
                     }
@@ -53,6 +53,18 @@ struct ParcelDetailView: View {
         }
         .sheet(isPresented: $showingEdit) {
             EditParcelView(parcel: parcel)
+        }
+        .alert(
+            "Delete this parcel?",
+            isPresented: $showingDeleteConfirmation
+        ) {
+            Button("Delete", role: .destructive) {
+                modelContext.delete(parcel)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("\(parcel.titleText) and its tracking history will be removed from this device.")
         }
         .task {
             await refresh()
