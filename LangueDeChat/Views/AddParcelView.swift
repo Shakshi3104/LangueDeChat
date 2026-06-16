@@ -22,10 +22,19 @@ struct AddParcelView: View {
                             Text(c.displayName).tag(c)
                         }
                     }
-                    TextField("Tracking Number", text: $trackingNumber)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.asciiCapable)
+                    HStack(spacing: 8) {
+                        TextField("Tracking Number", text: $trackingNumber)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.asciiCapable)
+                        PasteButton(payloadType: String.self) { strings in
+                            guard let raw = strings.first else { return }
+                            trackingNumber = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
+                        .labelStyle(.iconOnly)
+                        .buttonBorderShape(.capsule)
+                        .tint(.accentColor)
+                    }
                     TextField("Nickname (optional)", text: $nickname)
                 }
 
