@@ -5,11 +5,11 @@ import TsuiseKit
 struct ParcelDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     let parcel: TrackedParcel
     @State private var isRefreshing = false
     @State private var showingEdit = false
     @State private var showingDeleteConfirmation = false
+    @State private var safariURL: IdentifiableURL?
 
     var body: some View {
         ScrollView {
@@ -30,7 +30,7 @@ struct ParcelDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
-                    if let url = trackingURL { openURL(url) }
+                    if let url = trackingURL { safariURL = IdentifiableURL(url) }
                 } label: {
                     Image(systemName: "safari")
                 }
@@ -53,6 +53,9 @@ struct ParcelDetailView: View {
         }
         .sheet(isPresented: $showingEdit) {
             EditParcelView(parcel: parcel)
+        }
+        .sheet(item: $safariURL) { item in
+            SafariView(url: item.url)
         }
         .alert(
             "Delete this parcel?",
@@ -139,7 +142,9 @@ struct ParcelDetailView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             if let url = parcel.orderURLValue {
-                Link(destination: url) {
+                Button {
+                    safariURL = IdentifiableURL(url)
+                } label: {
                     Label("View order", systemImage: "link")
                         .font(.subheadline)
                 }
