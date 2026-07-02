@@ -8,11 +8,22 @@ final class ParcelRefresher {
     private init() {}
 
     func refresh(_ parcel: TrackedParcel) async throws {
+        let oldStatus = parcel.currentStatus
+        let isFirstFetch = parcel.lastRefreshedAt == nil
+
         let info = try await TsuiseKit.fetch(
             carrier: parcel.carrier,
             trackingNumber: parcel.trackingNumber
         )
         parcel.updateCache(with: info)
+
+        if !isFirstFetch && parcel.currentStatus != oldStatus {
+            NotificationManager.shared.notifyStatusChange(
+                parcelTitle: parcel.titleText,
+                newStatus: parcel.currentStatus
+            )
+        }
+        await LiveActivityManager.shared.update(parcel)
     }
 
     func refreshAll(in context: ModelContext) async {
@@ -26,5 +37,6 @@ final class ParcelRefresher {
             }
         }
         try? context.save()
+        BackgroundRefreshManager.scheduleNext()
     }
 }
