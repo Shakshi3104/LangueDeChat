@@ -21,8 +21,8 @@ struct ParcelListView: View {
     private var filteredParcels: [TrackedParcel] {
         switch filter {
         case .all:        parcels
-        case .inProgress: parcels.filter { !$0.isDelivered }
-        case .delivered:  parcels.filter { $0.isDelivered }
+        case .inProgress: parcels.filter { $0.progressStep != .delivered }
+        case .delivered:  parcels.filter { $0.progressStep == .delivered }
         }
     }
 
