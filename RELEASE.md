@@ -96,6 +96,17 @@ Beta App Review は **Marketing Version ごとに 1 回**通れば、同 Version
 
 ウィジェット拡張の `LangueDeChatWidgets-Info.plist` に `CFBundleDisplayName` 等の必須キーがない場合に出る。エラーメッセージで指摘されたキーを補う。
 
+### `Build is not in an externally assignable state`(External グループ割り当て失敗)
+
+アップロード自体は成功しているが、build が **Missing Compliance**(輸出コンプライアンス未回答)のままだと External グループに割り当てられず、`asc publish testflight` の publish ステップがここで落ちる。`asc builds list` で対象 build に `usesNonExemptEncryption` 属性が無ければこれ。復旧は 2 コマンド:
+
+```bash
+asc builds update --app "$ASC_APP_ID" --latest --uses-non-exempt-encryption=false
+asc builds add-groups --app "$ASC_APP_ID" --latest --group "LangueDeChat Tester"
+```
+
+恒久対策として `Info.plist` に `ITSAppUsesNonExemptEncryption = false` を追加済み(このアプリは標準 HTTPS/TLS のみで非対象暗号を使わない)。以後のアップロードは自動でコンプライアンスがクリアされる。
+
 ### `アクセス権をリクエスト` 画面が出る(App Store Connect API)
 
 個人アカウントでも初回は組織レベルで API アクセスを有効化する必要がある。ボタンを押せば即時 or メール確認を経て有効化される。
