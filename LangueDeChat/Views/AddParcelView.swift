@@ -91,6 +91,7 @@ struct AddParcelView: View {
         do {
             try await ParcelRefresher.shared.refresh(parcel)
             try modelContext.save()
+            LiveActivityManager.shared.start(for: parcel)
             dismiss()
         } catch {
             modelContext.delete(parcel)
