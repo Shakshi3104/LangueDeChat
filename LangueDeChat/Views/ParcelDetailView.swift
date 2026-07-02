@@ -194,7 +194,7 @@ struct ParcelDetailView: View {
         case .japanPost:
             URL(string: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=\(parcel.trackingNumber)&searchKind=S004&locale=ja")
         case .yamato:
-            URL(string: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=\(parcel.trackingNumber)")
+            URL(string: "https://member.kms.kuronekoyamato.co.jp/parcel/detail?pno=\(parcel.trackingNumber)")
         case .sagawa:
             URL(string: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=\(parcel.trackingNumber)")
         }
