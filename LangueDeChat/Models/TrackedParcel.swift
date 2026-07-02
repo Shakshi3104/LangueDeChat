@@ -65,8 +65,9 @@ extension TrackedParcel {
     }
 
     /// Whether the parcel's latest status indicates final delivery.
-    /// Carriers phrase this differently — 配達完了 (Yamato/Sagawa) and
-    /// お届け済 / 配達済 / お届け完了 (Japan Post variants) all qualify.
+    /// Carriers phrase this differently — 配達完了 (Yamato/Sagawa),
+    /// お届け済 / 配達済 / お届け完了 (Japan Post variants), and
+    /// 引渡完了 (Sagawa hand-off, e.g. after a 受取先変更) all qualify.
     var isDelivered: Bool {
         Self.deliveryMarkers.contains { currentStatus.contains($0) }
     }
@@ -85,7 +86,7 @@ extension TrackedParcel {
         return URL(string: s)
     }
 
-    private static let deliveryMarkers = ["配達完了", "お届け済", "お届け完了", "配達済"]
+    private static let deliveryMarkers = ["配達完了", "お届け済", "お届け完了", "配達済", "引渡完了"]
 
     private static let listDateFormatter: DateFormatter = {
         let f = DateFormatter()
