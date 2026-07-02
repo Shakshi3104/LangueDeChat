@@ -191,7 +191,7 @@ struct ParcelDetailView: View {
         case .yamato:
             URL(string: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?init=yes&number01=\(parcel.trackingNumber)")
         case .sagawa:
-            URL(string: "https://k2k.sagawa-exp.co.jp/p/sagawa/web/okurijoinput.jsp")
+            URL(string: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=\(parcel.trackingNumber)")
         }
     }
 
