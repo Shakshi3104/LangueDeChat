@@ -33,6 +33,14 @@ final class TrackedParcel {
     }
 }
 
+enum DeliveryStage: Int, CaseIterable {
+    case received = 0
+    case inTransit = 1
+    case atHub = 2
+    case outForDelivery = 3
+    case delivered = 4
+}
+
 extension TrackedParcel {
     var carrier: Carrier {
         Carrier(rawValue: carrierRaw) ?? .japanPost
@@ -84,6 +92,21 @@ extension TrackedParcel {
     var orderURLValue: URL? {
         guard let s = orderURL, !s.isEmpty else { return nil }
         return URL(string: s)
+    }
+
+    /// Delivery stage index (0–4) for Live Activity progress bar.
+    /// 0: Received  1: In Transit  2: At Hub  3: Out for Delivery  4: Delivered
+    var progressStep: DeliveryStage {
+        let s = currentStatus
+        if isDelivered { return .delivered }
+        if ["持ち出し中", "配達中"].contains(where: { s.contains($0) }) { return .outForDelivery }
+        // Includes failed attempts (ご不在/持戻), holds (保管中),
+        // reschedules (日時変更/依頼受付), and investigation (調査中).
+        if ["到着", "支店", "営業所", "作業店", "センター", "配達店",
+            "保管中", "持戻", "ご不在", "日時変更", "依頼受付", "調査中",
+            "受取場所"].contains(where: { s.contains($0) }) { return .atHub }
+        if ["輸送中", "幹線", "発送", "積み込み"].contains(where: { s.contains($0) }) { return .inTransit }
+        return .received
     }
 
     private static let deliveryMarkers = ["配達完了", "お届け済", "お届け完了", "配達済", "引渡完了"]
