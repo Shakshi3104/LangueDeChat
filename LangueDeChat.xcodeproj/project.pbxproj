@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		CE0DD9AA2FE1043B00025C47 /* TsuiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = CE0DD9AC2FE1043B00025C47 /* TsuiseKit */; };
 		CE0DDA0B2FE2043B00025C47 /* LangueDeChatWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CE0DDA012FE2043B00025C47 /* LangueDeChatWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CE0DDB022FE3000000025C47 /* LangueDeChatShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CE0DDB012FE3000000025C47 /* LangueDeChatShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,6 +19,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = CE0DDA062FE2043B00025C47;
 			remoteInfo = LangueDeChatWidgets;
+		};
+		CE0DDB082FE3000000025C47 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CE0DD9852FE1043B00025C47 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CE0DDB042FE3000000025C47;
+			remoteInfo = LangueDeChatShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -29,6 +37,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				CE0DDA0B2FE2043B00025C47 /* LangueDeChatWidgets.appex in Embed Foundation Extensions */,
+				CE0DDB022FE3000000025C47 /* LangueDeChatShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -38,6 +47,7 @@
 /* Begin PBXFileReference section */
 		CE0DD98D2FE1043B00025C47 /* LangueDeChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LangueDeChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE0DDA012FE2043B00025C47 /* LangueDeChatWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LangueDeChatWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE0DDB012FE3000000025C47 /* LangueDeChatShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LangueDeChatShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -49,6 +59,11 @@
 		CE0DDA022FE2043B00025C47 /* LangueDeChatWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LangueDeChatWidgets;
+			sourceTree = "<group>";
+		};
+		CE0DDB032FE3000000025C47 /* LangueDeChatShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LangueDeChatShare;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +84,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE0DDB062FE3000000025C47 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -77,6 +99,7 @@
 			children = (
 				CE0DD98F2FE1043B00025C47 /* LangueDeChat */,
 				CE0DDA022FE2043B00025C47 /* LangueDeChatWidgets */,
+				CE0DDB032FE3000000025C47 /* LangueDeChatShare */,
 				CE0DD98E2FE1043B00025C47 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -86,6 +109,7 @@
 			children = (
 				CE0DD98D2FE1043B00025C47 /* LangueDeChat.app */,
 				CE0DDA012FE2043B00025C47 /* LangueDeChatWidgets.appex */,
+				CE0DDB012FE3000000025C47 /* LangueDeChatShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -106,6 +130,7 @@
 			);
 			dependencies = (
 				CE0DDA0D2FE2043B00025C47 /* PBXTargetDependency */,
+				CE0DDB092FE3000000025C47 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				CE0DD98F2FE1043B00025C47 /* LangueDeChat */,
@@ -138,6 +163,26 @@
 			productReference = CE0DDA012FE2043B00025C47 /* LangueDeChatWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		CE0DDB042FE3000000025C47 /* LangueDeChatShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CE0DDB0A2FE3000000025C47 /* Build configuration list for PBXNativeTarget "LangueDeChatShare" */;
+			buildPhases = (
+				CE0DDB052FE3000000025C47 /* Sources */,
+				CE0DDB062FE3000000025C47 /* Frameworks */,
+				CE0DDB072FE3000000025C47 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CE0DDB032FE3000000025C47 /* LangueDeChatShare */,
+			);
+			name = LangueDeChatShare;
+			productName = LangueDeChatShare;
+			productReference = CE0DDB012FE3000000025C47 /* LangueDeChatShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -152,6 +197,9 @@
 						CreatedOnToolsVersion = 26.5;
 					};
 					CE0DDA062FE2043B00025C47 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					CE0DDB042FE3000000025C47 = {
 						CreatedOnToolsVersion = 26.5;
 					};
 				};
@@ -175,6 +223,7 @@
 			targets = (
 				CE0DD98C2FE1043B00025C47 /* LangueDeChat */,
 				CE0DDA062FE2043B00025C47 /* LangueDeChatWidgets */,
+				CE0DDB042FE3000000025C47 /* LangueDeChatShare */,
 			);
 		};
 /* End PBXProject section */
@@ -188,6 +237,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		CE0DDA052FE2043B00025C47 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE0DDB072FE3000000025C47 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -211,6 +267,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CE0DDB052FE3000000025C47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -218,6 +281,11 @@
 			isa = PBXTargetDependency;
 			target = CE0DDA062FE2043B00025C47 /* LangueDeChatWidgets */;
 			targetProxy = CE0DDA0C2FE2043B00025C47 /* PBXContainerItemProxy */;
+		};
+		CE0DDB092FE3000000025C47 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CE0DDB042FE3000000025C47 /* LangueDeChatShare */;
+			targetProxy = CE0DDB082FE3000000025C47 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -463,6 +531,60 @@
 			};
 			name = Release;
 		};
+		CE0DDB0B2FE3000000025C47 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WHBF4Z49B6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "LangueDeChatShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = LangueDeChat;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shakshi.LangueDeChat.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CE0DDB0C2FE3000000025C47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WHBF4Z49B6;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "LangueDeChatShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = LangueDeChat;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../Frameworks",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shakshi.LangueDeChat.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -489,6 +611,15 @@
 			buildConfigurations = (
 				CE0DDA072FE2043B00025C47 /* Debug */,
 				CE0DDA082FE2043B00025C47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CE0DDB0A2FE3000000025C47 /* Build configuration list for PBXNativeTarget "LangueDeChatShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CE0DDB0B2FE3000000025C47 /* Debug */,
+				CE0DDB0C2FE3000000025C47 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
