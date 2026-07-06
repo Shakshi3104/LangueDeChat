@@ -82,11 +82,21 @@ struct ParcelLiveActivityWidget: Widget {
                 Image(systemName: "shippingbox.fill")
                     .foregroundStyle(Color.accentColor)
             } compactTrailing: {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "circle.dotted")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+                if context.state.isDelivered {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    DeliveryProgressRing(step: context.state.progressStep)
+                        .frame(width: 20, height: 20)
+                }
             } minimal: {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+                if context.state.isDelivered {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    DeliveryProgressRing(step: context.state.progressStep, lineWidth: 2.5)
+                        .frame(width: 18, height: 18)
+                }
             }
         }
     }
@@ -148,6 +158,37 @@ struct DeliveryProgressBar: View {
 
     private var activeColor: Color {
         step == totalSteps - 1 ? .green : .accentColor
+    }
+}
+
+// MARK: - Progress Ring
+
+/// Compact circular counterpart to `DeliveryProgressBar`, used in the
+/// Dynamic Island compact/minimal presentations and the Apple Watch Smart
+/// Stack. The ring fills as the parcel advances toward delivery, so the
+/// state reads as "how far along" instead of an ambiguous dotted circle.
+struct DeliveryProgressRing: View {
+    let step: Int
+    var lineWidth: CGFloat = 3
+
+    private let totalSteps = 5
+
+    private var fraction: Double {
+        let clamped = min(max(step + 1, 0), totalSteps)
+        return Double(clamped) / Double(totalSteps)
+    }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.secondary.opacity(0.25), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: fraction)
+                .stroke(Color.accentColor,
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .padding(lineWidth / 2)
     }
 }
 
