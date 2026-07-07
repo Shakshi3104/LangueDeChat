@@ -30,20 +30,7 @@ final class LiveActivityManager {
     func update(_ parcel: TrackedParcel) async {
         for activity in Activity<ParcelActivityAttributes>.activities {
             guard activity.attributes.trackingNumber == parcel.trackingNumber else { continue }
-
-            let newState = ParcelActivityAttributes.ContentState(
-                status: parcel.currentStatus,
-                isDelivered: parcel.isDelivered,
-                progressStep: parcel.progressStep.rawValue,
-                lastUpdated: Date()
-            )
-            let content = ActivityContent(state: newState, staleDate: nil)
-
-            if parcel.isDelivered {
-                await activity.end(content, dismissalPolicy: .after(Date().addingTimeInterval(3600)))
-            } else {
-                await activity.update(content)
-            }
+            await sync(activity, to: parcel)
         }
     }
 
@@ -69,19 +56,27 @@ final class LiveActivityManager {
                 continue
             }
 
-            let state = ParcelActivityAttributes.ContentState(
-                status: parcel.currentStatus,
-                isDelivered: parcel.isDelivered,
-                progressStep: parcel.progressStep.rawValue,
-                lastUpdated: parcel.lastRefreshedAt ?? Date()
-            )
-            let content = ActivityContent(state: state, staleDate: nil)
+            await sync(activity, to: parcel)
+        }
+    }
 
-            if parcel.isDelivered {
-                await activity.end(content, dismissalPolicy: .after(Date().addingTimeInterval(3600)))
-            } else {
-                await activity.update(content)
-            }
+    /// Pushes `parcel`'s current cached state onto `activity`: delivered parcels
+    /// end the activity (with a 1h dismissal window) and in-progress ones update
+    /// in place. Shared by `update(_:)` (after a fetch) and `reconcile(with:)`
+    /// (from cache on foreground) so the two paths can't drift apart.
+    private func sync(_ activity: Activity<ParcelActivityAttributes>, to parcel: TrackedParcel) async {
+        let state = ParcelActivityAttributes.ContentState(
+            status: parcel.currentStatus,
+            isDelivered: parcel.isDelivered,
+            progressStep: parcel.progressStep.rawValue,
+            lastUpdated: parcel.lastRefreshedAt ?? Date()
+        )
+        let content = ActivityContent(state: state, staleDate: nil)
+
+        if parcel.isDelivered {
+            await activity.end(content, dismissalPolicy: .after(Date().addingTimeInterval(3600)))
+        } else {
+            await activity.update(content)
         }
     }
 }
