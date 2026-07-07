@@ -26,7 +26,7 @@ There is no `swift test` — this is an iOS app target, not a Swift package. The
 
 A single SwiftUI app target backed by SwiftData, using the TsuiseKit SPM package for the actual carrier scraping. The whole app surface is four screens:
 
-- `ParcelListView` — inset-grouped list of `TrackedParcel`s with a filter (`All` / `In Progress` / `Delivered`) and a + floating action button. Swipe-to-delete shows a confirmation alert before touching the model context.
+- `ParcelListView` — inset-grouped list of `TrackedParcel`s with a filter (`All` / `In Progress` / `Delivered`) and a + floating action button. Swipe-to-delete removes the parcel immediately (no confirmation alert).
 - `ParcelDetailView` — card-style header, status pills (delivered / ETA), notes, order link, and a vertical timeline of `TrackingEvent`s. Pull-to-refresh re-hits TsuiseKit. Menu has Edit / Refresh / Delete (Delete confirmed via alert).
 - `AddParcelView` — form to register a new parcel; includes a `PasteButton` next to the tracking number field.
 - `EditParcelView` — same fields as Add minus carrier / tracking number (those are read-only after creation, since changing them would desync `cachedInfoData`).
@@ -55,7 +55,7 @@ These are not negotiable inside this repo — match them when adding new screens
 - **English UI.** Every user-facing string in this app is English, including `Carrier.displayName` (which lives in TsuiseKit). Carrier-returned data (`持ち出し中`, post office names, etc.) stays as-is since that's source data.
 - **Dates: `yyyy/MM/dd`, POSIX locale, `Asia/Tokyo` timezone.** Always set both `locale` and `timeZone` on `DateFormatter`. The TZ pin matters when the user is overseas.
 - **System colors only.** Use `.primary` / `.secondary` / `.tertiary` for text, `Color(.systemGroupedBackground)` / `Color(.secondarySystemGroupedBackground)` for surfaces, and `Color.accentColor` for the cyan tint. Don't hardcode `Color.white` / `Color.black` / `.preferredColorScheme(.dark)` — they break light mode.
-- **Destructive actions confirm via `.alert`, not `.confirmationDialog`.** Both delete entry points (list swipe action and detail menu) use the same alert with the parcel's `titleText` in the message.
+- **Destructive actions in the detail view confirm via `.alert`, not `.confirmationDialog`.** The detail menu's Delete uses an alert with the parcel's `titleText` in the message. The list swipe-to-delete is the deliberate exception — it deletes immediately without confirmation.
 - **`yyyy/MM/dd` not `MMM d`.** Matches the user's `yomy` project convention.
 
 ## Easy to miss
