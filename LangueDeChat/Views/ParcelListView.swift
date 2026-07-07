@@ -12,6 +12,7 @@ enum ParcelFilter: String, CaseIterable, Identifiable {
 
 struct ParcelListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \TrackedParcel.addedAt, order: .reverse) private var parcels: [TrackedParcel]
     @State private var showingAdd = false
     @State private var isRefreshing = false
@@ -113,7 +114,15 @@ struct ParcelListView: View {
             Text("\(parcel.titleText) and its tracking history will be removed from this device.")
         }
         .task {
+            await PendingParcelImporter.importPending(into: modelContext)
             await refreshAll()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            Task {
+                await PendingParcelImporter.importPending(into: modelContext)
+                await refreshAll()
+            }
         }
     }
 
