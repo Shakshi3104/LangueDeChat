@@ -10,17 +10,6 @@
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.shakshi.LangueDeChat.deeplink</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>languedechat</string>
-			</array>
-		</dict>
-	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

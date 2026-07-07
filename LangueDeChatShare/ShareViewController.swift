@@ -1,26 +1,47 @@
 import UIKit
+import SwiftUI
 import UniformTypeIdentifiers
 
 /// Share extension entry point. Pulls text (and any URL) out of the shared item,
-/// extracts a carrier + tracking number, and hands off to the containing app via
-/// the `languedechat://add` deep link — where the user confirms in AddParcelView.
+/// extracts a carrier + tracking number, and shows a small confirmation form
+/// hosted right in the share sheet. On "Add" the parcel is written to the App
+/// Group queue; the main app imports it the next time it comes to the front.
 final class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        setUpProgressUI()
-        Task { await run() }
+        view.backgroundColor = .clear
+        Task {
+            let text = await extractSharedText()
+            let parsed = text.flatMap(TrackingNumberParser.parse)
+            presentForm(carrier: parsed?.carrier, trackingNumber: parsed?.trackingNumber ?? "")
+        }
     }
 
-    private func run() async {
-        let text = await extractSharedText()
-        if let text, let result = TrackingNumberParser.parse(text),
-           let url = TrackingNumberParser.deepLink(for: result) {
-            await openContainingApp(url)
-        }
-        // Whether or not we found a number, dismiss the sheet. On a miss the user
-        // simply lands back in Mail; nothing is added.
-        extensionContext?.completeRequest(returningItems: nil)
+    private func presentForm(carrier: String?, trackingNumber: String) {
+        let form = ShareFormView(
+            initialCarrier: carrier,
+            initialTrackingNumber: trackingNumber,
+            onAdd: { [weak self] pending in
+                PendingParcelStore.append(pending)
+                self?.extensionContext?.completeRequest(returningItems: nil)
+            },
+            onCancel: { [weak self] in
+                self?.extensionContext?.cancelRequest(
+                    withError: NSError(domain: "com.shakshi.LangueDeChat.share", code: 0)
+                )
+            }
+        )
+        let host = UIHostingController(rootView: form)
+        addChild(host)
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(host.view)
+        NSLayoutConstraint.activate([
+            host.view.topAnchor.constraint(equalTo: view.topAnchor),
+            host.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            host.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        host.didMove(toParent: self)
     }
 
     // MARK: - Shared content extraction
@@ -74,51 +95,5 @@ final class ShareViewController: UIViewController {
                 continuation.resume(returning: (item as? URL)?.absoluteString)
             }
         }
-    }
-
-    // MARK: - Open containing app
-
-    /// Opens the app's deep link. `extensionContext.open` is the sanctioned path;
-    /// the responder-chain walk is the long-standing fallback for custom schemes.
-    private func openContainingApp(_ url: URL) async {
-        let opened = await withCheckedContinuation { continuation in
-            extensionContext?.open(url) { success in
-                continuation.resume(returning: success)
-            }
-        }
-        if !opened { openViaResponderChain(url) }
-    }
-
-    private func openViaResponderChain(_ url: URL) {
-        var responder: UIResponder? = self
-        let selector = sel_registerName("openURL:")
-        while let current = responder {
-            if current.responds(to: selector) && current != self {
-                current.perform(selector, with: url)
-                return
-            }
-            responder = current.next
-        }
-    }
-
-    // MARK: - UI
-
-    private func setUpProgressUI() {
-        let spinner = UIActivityIndicatorView(style: .medium)
-        spinner.startAnimating()
-        let label = UILabel()
-        label.text = "Adding to LangueDeChat…"
-        label.textColor = .secondaryLabel
-        label.font = .preferredFont(forTextStyle: .subheadline)
-        let stack = UIStackView(arrangedSubviews: [spinner, label])
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-        ])
     }
 }

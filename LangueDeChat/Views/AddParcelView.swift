@@ -13,11 +13,6 @@ struct AddParcelView: View {
     @State private var isAdding = false
     @State private var errorMessage: String?
 
-    init(prefill: AddParcelPrefill? = nil) {
-        _trackingNumber = State(initialValue: prefill?.trackingNumber ?? "")
-        _carrier = State(initialValue: prefill?.carrier ?? .japanPost)
-    }
-
     var body: some View {
         NavigationStack {
             Form {

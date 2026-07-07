@@ -1,0 +1,85 @@
+import SwiftUI
+
+/// Carrier choices shown in the share-sheet form. Duplicated locally (raw value +
+/// English display name) so the extension links nothing but system frameworks —
+/// the raw values must stay in sync with `TsuiseKit.Carrier`.
+private struct ShareCarrier: Identifiable, Hashable {
+    let raw: String
+    let name: String
+    var id: String { raw }
+
+    static let all = [
+        ShareCarrier(raw: "japanpost", name: "Japan Post"),
+        ShareCarrier(raw: "yamato", name: "Yamato Transport"),
+        ShareCarrier(raw: "sagawa", name: "Sagawa Express"),
+    ]
+}
+
+/// Confirmation form hosted inside the share sheet. Pre-filled from the parser;
+/// the user can correct the carrier / number before adding.
+struct ShareFormView: View {
+    let initialCarrier: String?
+    let initialTrackingNumber: String
+    let onAdd: (PendingParcel) -> Void
+    let onCancel: () -> Void
+
+    @State private var carrier: String
+    @State private var trackingNumber: String
+    @State private var nickname: String = ""
+
+    init(
+        initialCarrier: String?,
+        initialTrackingNumber: String,
+        onAdd: @escaping (PendingParcel) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.initialCarrier = initialCarrier
+        self.initialTrackingNumber = initialTrackingNumber
+        self.onAdd = onAdd
+        self.onCancel = onCancel
+        _carrier = State(initialValue: initialCarrier ?? ShareCarrier.all[0].raw)
+        _trackingNumber = State(initialValue: initialTrackingNumber)
+    }
+
+    private var trimmedNumber: String {
+        trackingNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Carrier", selection: $carrier) {
+                        ForEach(ShareCarrier.all) { option in
+                            Text(option.name).tag(option.raw)
+                        }
+                    }
+                    TextField("Tracking Number", text: $trackingNumber)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.asciiCapable)
+                    TextField("Nickname (optional)", text: $nickname)
+                } footer: {
+                    Text("Added to LangueDeChat. Open the app to see tracking details.")
+                }
+            }
+            .navigationTitle("Add Parcel")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        onAdd(PendingParcel(
+                            carrier: carrier,
+                            trackingNumber: trimmedNumber,
+                            nickname: nickname.isEmpty ? nil : nickname
+                        ))
+                    }
+                    .disabled(trimmedNumber.isEmpty)
+                }
+            }
+        }
+    }
+}

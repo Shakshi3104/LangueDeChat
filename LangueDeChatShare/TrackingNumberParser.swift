@@ -1,7 +1,6 @@
 import Foundation
 
-/// Extracts a carrier + tracking number from shared email text and builds the
-/// `languedechat://add` deep link the containing app opens.
+/// Extracts a carrier + tracking number from shared email text.
 ///
 /// Kept dependency-free (Foundation only) so the share extension links nothing
 /// but the system frameworks. Carrier is emitted as a raw string that matches
@@ -65,20 +64,6 @@ enum TrackingNumberParser {
             return Result(carrier: carrier, trackingNumber: normalize(loose))
         }
         return nil
-    }
-
-    /// Build the deep link the app opens. Carrier is omitted when unknown so the
-    /// app falls back to its default picker value for the user to correct.
-    static func deepLink(for result: Result) -> URL? {
-        var components = URLComponents()
-        components.scheme = "languedechat"
-        components.host = "add"
-        var items = [URLQueryItem(name: "number", value: result.trackingNumber)]
-        if let carrier = result.carrier {
-            items.append(URLQueryItem(name: "carrier", value: carrier))
-        }
-        components.queryItems = items
-        return components.url
     }
 
     // MARK: - Helpers
