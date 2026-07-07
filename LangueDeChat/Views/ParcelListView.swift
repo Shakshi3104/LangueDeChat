@@ -17,7 +17,6 @@ struct ParcelListView: View {
     @State private var showingAdd = false
     @State private var isRefreshing = false
     @State private var filter: ParcelFilter = .all
-    @State private var parcelToDelete: TrackedParcel?
 
     private var filteredParcels: [TrackedParcel] {
         switch filter {
@@ -36,7 +35,7 @@ struct ParcelListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            parcelToDelete = parcel
+                            modelContext.delete(parcel)
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -97,21 +96,6 @@ struct ParcelListView: View {
         }
         .sheet(isPresented: $showingAdd) {
             AddParcelView()
-        }
-        .alert(
-            "Delete this parcel?",
-            isPresented: Binding(
-                get: { parcelToDelete != nil },
-                set: { if !$0 { parcelToDelete = nil } }
-            ),
-            presenting: parcelToDelete
-        ) { parcel in
-            Button("Delete", role: .destructive) {
-                modelContext.delete(parcel)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { parcel in
-            Text("\(parcel.titleText) and its tracking history will be removed from this device.")
         }
         .task {
             await PendingParcelImporter.importPending(into: modelContext)
