@@ -34,36 +34,69 @@ struct ParcelLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label(context.attributes.carrierName, systemImage: "shippingbox.fill")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color.accentColor)
-                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        Image(systemName: "shippingbox.fill")
+                            .font(.title3)
+                            .foregroundStyle(Color.accentColor)
+                            .frame(width: 40, height: 40)
+                            .background(Color.accentColor.opacity(0.15), in: RoundedRectangle(cornerRadius: 11))
+                        Text(context.attributes.carrierName)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .padding(.leading, 2)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text(context.state.isDelivered ? "Delivered" : "In Transit")
-                        .font(.caption.bold())
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.status)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .fixedSize()
+                        .padding(.trailing, 2)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    DeliveryProgressBar(step: context.state.progressStep)
-                        .padding(.horizontal, 4)
-                        .padding(.top, 2)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(context.state.status)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+
+                        DeliveryProgressBar(step: context.state.progressStep)
+
+                        HStack {
+                            Text(context.attributes.trackingNumber)
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text("Updated \(context.state.lastUpdated, style: .time)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .padding(.top, 6)
                 }
             } compactLeading: {
                 Image(systemName: "shippingbox.fill")
                     .foregroundStyle(Color.accentColor)
             } compactTrailing: {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "circle.dotted")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+                if context.state.isDelivered {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    DeliveryProgressRing(step: context.state.progressStep)
+                        .frame(width: 20, height: 20)
+                }
             } minimal: {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+                if context.state.isDelivered {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    DeliveryProgressRing(step: context.state.progressStep, lineWidth: 2.5)
+                        .frame(width: 18, height: 18)
+                }
             }
         }
     }
@@ -125,6 +158,37 @@ struct DeliveryProgressBar: View {
 
     private var activeColor: Color {
         step == totalSteps - 1 ? .green : .accentColor
+    }
+}
+
+// MARK: - Progress Ring
+
+/// Compact circular counterpart to `DeliveryProgressBar`, used in the
+/// Dynamic Island compact/minimal presentations and the Apple Watch Smart
+/// Stack. The ring fills as the parcel advances toward delivery, so the
+/// state reads as "how far along" instead of an ambiguous dotted circle.
+struct DeliveryProgressRing: View {
+    let step: Int
+    var lineWidth: CGFloat = 3
+
+    private let totalSteps = 5
+
+    private var fraction: Double {
+        let clamped = min(max(step + 1, 0), totalSteps)
+        return Double(clamped) / Double(totalSteps)
+    }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.secondary.opacity(0.25), lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: fraction)
+                .stroke(Color.accentColor,
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .padding(lineWidth / 2)
     }
 }
 
