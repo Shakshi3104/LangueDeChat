@@ -27,6 +27,11 @@ enum PendingParcelStore {
         list.append(parcel)
         if let data = try? JSONEncoder().encode(list) {
             defaults.set(data, forKey: key)
+            // Force an immediate flush: the share extension calls
+            // `completeRequest` right after this, tearing the process down
+            // before the async cfprefsd write would otherwise reach the App
+            // Group container — which loses the hand-off.
+            defaults.synchronize()
         }
     }
 
