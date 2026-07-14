@@ -20,7 +20,7 @@ private struct ShareCarrier: Identifiable, Hashable {
 struct ShareFormView: View {
     let initialCarrier: String?
     let initialTrackingNumber: String
-    let onAdd: (PendingParcel) -> Void
+    let onAdd: (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Void
     let onCancel: () -> Void
 
     @State private var carrier: String
@@ -30,7 +30,7 @@ struct ShareFormView: View {
     init(
         initialCarrier: String?,
         initialTrackingNumber: String,
-        onAdd: @escaping (PendingParcel) -> Void,
+        onAdd: @escaping (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.initialCarrier = initialCarrier
@@ -71,11 +71,7 @@ struct ShareFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        onAdd(PendingParcel(
-                            carrier: carrier,
-                            trackingNumber: trimmedNumber,
-                            nickname: nickname.isEmpty ? nil : nickname
-                        ))
+                        onAdd(carrier, trimmedNumber, nickname.isEmpty ? nil : nickname)
                     }
                     .disabled(trimmedNumber.isEmpty)
                 }

@@ -21,8 +21,12 @@ final class ShareViewController: UIViewController {
         let form = ShareFormView(
             initialCarrier: carrier,
             initialTrackingNumber: trackingNumber,
-            onAdd: { [weak self] pending in
-                PendingParcelStore.append(pending)
+            onAdd: { [weak self] carrierRaw, trackingNumber, nickname in
+                SharedStore.insertParcel(
+                    carrierRaw: carrierRaw,
+                    trackingNumber: trackingNumber,
+                    nickname: nickname
+                )
                 self?.extensionContext?.completeRequest(returningItems: nil)
             },
             onCancel: { [weak self] in

@@ -31,11 +31,13 @@ A single SwiftUI app target backed by SwiftData, using the TsuiseKit SPM package
 - `AddParcelView` — form to register a new parcel; includes a `PasteButton` next to the tracking number field.
 - `EditParcelView` — same fields as Add minus carrier / tracking number (those are read-only after creation, since changing them would desync `cachedInfoData`).
 
-### `TrackedParcel` (`Models/TrackedParcel.swift`)
+### `TrackedParcel` (`Models/TrackedParcel.swift` + `Models/TrackedParcel+Tracking.swift`)
 
 The persistent type. Stored properties:
 
 - `trackingNumber`, `carrierRaw` (raw value of `Carrier`), `nickname?`, `notes?`, `orderURL?`, `addedAt`, `lastRefreshedAt?`, `cachedInfoData?`.
+
+**The model is split across two files on purpose.** `TrackedParcel.swift` is the bare `@Model` — every stored property is a plain value type, **no `TsuiseKit` import**. Everything that interprets a parcel (`carrier`, `cachedInfo`, `isDelivered`, `progressStep`, the `Carrier`-typed convenience init, …) lives in `TrackedParcel+Tracking.swift`, which is app-only. This is what lets the share extension compile the same `@Model` into a **shared** SwiftData store without linking TsuiseKit (see "Share extension & shared store"). Keep TsuiseKit-dependent code out of the core file.
 
 `cachedInfoData` is a **JSON-encoded `TsuiseKit.TrackingInfo`** — events live inside that blob, not as a separate `@Model`. This is intentional: events are read in batch in the detail view and never queried in isolation, so a separate model + relationship would buy nothing and force a migration. Anything event-shaped that needs to be queryable (filter, sort, etc.) is exposed via a computed property:
 
@@ -43,6 +45,16 @@ The persistent type. Stored properties:
 - `deliveredAt` — first event whose `status` matches one of those markers, **derived from the cached events**, no stored field needed.
 
 If you ever need to query events directly (e.g. "events in the last 24 hours" across all parcels), that's the inflection point to break events out into a separate `@Model` with a relationship — and it WILL need a manual `SchemaMigrationPlan`.
+
+### Share extension & shared store
+
+A parcel can be registered from the share sheet (e.g. a tracking mail → Add). The extension (`LangueDeChatShare/`) shows `ShareFormView` hosted in the sheet, then on Add **inserts a `TrackedParcel` straight into the shared SwiftData store** and finishes — there is no hand-off queue.
+
+- The store lives in the **App Group container** (`SharedStore.swift`, `group.com.shakshi.LangueDeChat`), so the app and the extension open **one** store. `SharedStore.makeContainer()` is the single source of the container for the app (`LangueDeChatApp`), background refresh, and the extension's insert.
+- The app's `@Query` reads the extension's insert the next time it reads (launch / foreground). No queue, no drain, no `scenePhase` import trigger, no cfprefsd cross-process cache to race — those were the fragile parts of the old UserDefaults hand-off and are gone.
+- `TrackedParcel.swift` and `SharedStore.swift` are **duplicated verbatim** into `LangueDeChatShare/` because each synchronized folder belongs to a single target. Edit both copies together.
+- `SharedStore.migrateExistingStoreIfNeeded()` runs once in `LangueDeChatApp.init` to move a pre-App-Group store into the container. It copies rows through **live containers**, not by copying `.store` files — a force-quit app leaves recent writes in an un-checkpointed `-wal` that a raw file copy silently drops.
+- Parcels added by the extension have no Live Activity of their own; `LiveActivityManager.ensureStarted(for:)` (called after `refreshAll`) starts one once the parcel has fetched data.
 
 ### Refresh path
 
