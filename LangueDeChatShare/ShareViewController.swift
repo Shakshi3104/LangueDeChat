@@ -21,9 +21,18 @@ final class ShareViewController: UIViewController {
         let form = ShareFormView(
             initialCarrier: carrier,
             initialTrackingNumber: trackingNumber,
-            onAdd: { [weak self] pending in
-                PendingParcelStore.append(pending)
-                self?.extensionContext?.completeRequest(returningItems: nil)
+            onAdd: { [weak self] carrierRaw, trackingNumber, nickname in
+                let added = SharedStore.insertParcel(
+                    carrierRaw: carrierRaw,
+                    trackingNumber: trackingNumber,
+                    nickname: nickname
+                )
+                // Only dismiss on a real insert. A duplicate keeps the sheet up
+                // so the form can tell the user it's already tracked.
+                if added {
+                    self?.extensionContext?.completeRequest(returningItems: nil)
+                }
+                return added
             },
             onCancel: { [weak self] in
                 self?.extensionContext?.cancelRequest(

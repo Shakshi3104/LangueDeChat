@@ -27,6 +27,25 @@ final class LiveActivityManager {
         )
     }
 
+    /// Start a Live Activity for any in-progress parcel that has fetched data but
+    /// no running activity yet — e.g. one added from the share extension, which
+    /// inserts the parcel straight into the shared store and never calls `start`.
+    /// Idempotent: parcels that already have an activity or aren't yet fetched
+    /// are skipped.
+    func ensureStarted(for parcels: [TrackedParcel]) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        let running = Set(
+            Activity<ParcelActivityAttributes>.activities
+                .filter { $0.activityState == .active }
+                .map { $0.attributes.trackingNumber }
+        )
+        for parcel in parcels
+        where parcel.cachedInfo != nil && !parcel.isDelivered
+            && !running.contains(parcel.trackingNumber) {
+            start(for: parcel)
+        }
+    }
+
     func update(_ parcel: TrackedParcel) async {
         for activity in Activity<ParcelActivityAttributes>.activities {
             guard activity.attributes.trackingNumber == parcel.trackingNumber else { continue }

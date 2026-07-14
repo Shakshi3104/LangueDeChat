@@ -23,10 +23,7 @@ enum BackgroundRefreshManager {
         scheduleNext()
 
         let taskHandle = Task { @MainActor in
-            guard let container = try? ModelContainer(for: TrackedParcel.self) else {
-                task.setTaskCompleted(success: false)
-                return
-            }
+            let container = SharedStore.makeContainer()
             await ParcelRefresher.shared.refreshAll(in: container.mainContext)
             task.setTaskCompleted(success: true)
         }

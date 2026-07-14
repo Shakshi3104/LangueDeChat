@@ -98,18 +98,20 @@ struct ParcelListView: View {
             AddParcelView()
         }
         .task {
-            await PendingParcelImporter.importPending(into: modelContext)
             // Sync activities from cache first so a stale one is corrected
             // immediately, even before (or without) a successful network fetch.
             await LiveActivityManager.shared.reconcile(with: parcels)
             await refreshAll()
+            // Parcels added from the share extension land in the shared store
+            // with no Live Activity of their own — start one once refreshed.
+            LiveActivityManager.shared.ensureStarted(for: parcels)
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
             Task {
-                await PendingParcelImporter.importPending(into: modelContext)
                 await LiveActivityManager.shared.reconcile(with: parcels)
                 await refreshAll()
+                LiveActivityManager.shared.ensureStarted(for: parcels)
             }
         }
     }
