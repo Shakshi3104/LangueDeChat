@@ -20,17 +20,19 @@ private struct ShareCarrier: Identifiable, Hashable {
 struct ShareFormView: View {
     let initialCarrier: String?
     let initialTrackingNumber: String
-    let onAdd: (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Void
+    /// Returns `true` if the parcel was added, `false` if it's already tracked.
+    let onAdd: (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Bool
     let onCancel: () -> Void
 
     @State private var carrier: String
     @State private var trackingNumber: String
     @State private var nickname: String = ""
+    @State private var alreadyTracked = false
 
     init(
         initialCarrier: String?,
         initialTrackingNumber: String,
-        onAdd: @escaping (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Void,
+        onAdd: @escaping (_ carrierRaw: String, _ trackingNumber: String, _ nickname: String?) -> Bool,
         onCancel: @escaping () -> Void
     ) {
         self.initialCarrier = initialCarrier
@@ -58,9 +60,15 @@ struct ShareFormView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.asciiCapable)
+                        .onChange(of: trackingNumber) { alreadyTracked = false }
                     TextField("Nickname (optional)", text: $nickname)
                 } footer: {
-                    Text("Added to LangueDeChat. Open the app to see tracking details.")
+                    if alreadyTracked {
+                        Text("This parcel is already being tracked in LangueDeChat.")
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("Added to LangueDeChat. Open the app to see tracking details.")
+                    }
                 }
             }
             .navigationTitle("Add Parcel")
@@ -71,11 +79,14 @@ struct ShareFormView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        onAdd(carrier, trimmedNumber, nickname.isEmpty ? nil : nickname)
+                        // onAdd dismisses on success; a false result means the
+                        // parcel is already tracked, so surface that instead.
+                        alreadyTracked = !onAdd(carrier, trimmedNumber, nickname.isEmpty ? nil : nickname)
                     }
                     .disabled(trimmedNumber.isEmpty)
                 }
             }
+            .onChange(of: carrier) { alreadyTracked = false }
         }
     }
 }

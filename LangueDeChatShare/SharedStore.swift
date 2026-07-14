@@ -77,16 +77,19 @@ enum SharedStore {
         try? newContext.save()
     }
 
-    /// Insert a parcel from the share extension straight into the shared store,
-    /// skipping an exact duplicate (same carrier + tracking number). Uses the
-    /// TsuiseKit-free initializer so the extension links nothing extra, and its
-    /// own `ModelContext` so it isn't tied to the main actor.
-    static func insertParcel(carrierRaw: String, trackingNumber: String, nickname: String?) {
+    /// Insert a parcel from the share extension straight into the shared store.
+    /// Returns `false` without inserting if an exact duplicate (same carrier +
+    /// tracking number) is already tracked, so the caller can tell the user
+    /// instead of silently doing nothing. Uses the TsuiseKit-free initializer so
+    /// the extension links nothing extra, and its own `ModelContext` so it isn't
+    /// tied to the main actor.
+    @discardableResult
+    static func insertParcel(carrierRaw: String, trackingNumber: String, nickname: String?) -> Bool {
         let context = ModelContext(makeContainer())
 
-        let key = "\(carrierRaw)|\(trackingNumber)"
-        let existing = (try? context.fetch(FetchDescriptor<TrackedParcel>())) ?? []
-        guard !existing.contains(where: { "\($0.carrierRaw)|\($0.trackingNumber)" == key }) else { return }
+        guard !isTracked(carrierRaw: carrierRaw, trackingNumber: trackingNumber, in: context) else {
+            return false
+        }
 
         context.insert(TrackedParcel(
             trackingNumber: trackingNumber,
@@ -94,5 +97,17 @@ enum SharedStore {
             nickname: nickname
         ))
         try? context.save()
+        return true
+    }
+
+    /// Whether a parcel with this exact carrier + tracking number already exists.
+    static func isTracked(carrierRaw: String, trackingNumber: String) -> Bool {
+        isTracked(carrierRaw: carrierRaw, trackingNumber: trackingNumber, in: ModelContext(makeContainer()))
+    }
+
+    private static func isTracked(carrierRaw: String, trackingNumber: String, in context: ModelContext) -> Bool {
+        let key = "\(carrierRaw)|\(trackingNumber)"
+        let existing = (try? context.fetch(FetchDescriptor<TrackedParcel>())) ?? []
+        return existing.contains { "\($0.carrierRaw)|\($0.trackingNumber)" == key }
     }
 }

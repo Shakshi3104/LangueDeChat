@@ -22,12 +22,17 @@ final class ShareViewController: UIViewController {
             initialCarrier: carrier,
             initialTrackingNumber: trackingNumber,
             onAdd: { [weak self] carrierRaw, trackingNumber, nickname in
-                SharedStore.insertParcel(
+                let added = SharedStore.insertParcel(
                     carrierRaw: carrierRaw,
                     trackingNumber: trackingNumber,
                     nickname: nickname
                 )
-                self?.extensionContext?.completeRequest(returningItems: nil)
+                // Only dismiss on a real insert. A duplicate keeps the sheet up
+                // so the form can tell the user it's already tracked.
+                if added {
+                    self?.extensionContext?.completeRequest(returningItems: nil)
+                }
+                return added
             },
             onCancel: { [weak self] in
                 self?.extensionContext?.cancelRequest(
