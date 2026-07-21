@@ -70,13 +70,18 @@ struct ParcelLiveActivityWidget: Widget {
                                 .font(.caption2.monospacedDigit())
                                 .foregroundStyle(.tertiary)
                                 .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                             Spacer(minLength: 8)
                             Text("Updated \(context.state.lastUpdated, style: .time)")
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.9)
                         }
                     }
                     .padding(.top, 6)
+                    .padding(.bottom, 4)
+                    .padding(.horizontal, 4)
                 }
             } compactLeading: {
                 Image(systemName: "shippingbox.fill")
