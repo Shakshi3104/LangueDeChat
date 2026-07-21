@@ -104,15 +104,27 @@ struct ParcelLiveActivityWidget: Widget {
                 }
             }
         }
+        .supplementalActivityFamilies([.small])
     }
 }
 
 // MARK: - Lock Screen View
 
 private struct LockScreenLiveActivityView: View {
+    @Environment(\.activityFamily) private var activityFamily
     let context: ActivityViewContext<ParcelActivityAttributes>
 
     var body: some View {
+        switch activityFamily {
+        case .small:
+            watchView
+        default:
+            phoneView
+        }
+    }
+
+    // iPhone Lock Screen / StandBy presentation.
+    private var phoneView: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .center) {
                 Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
@@ -136,6 +148,38 @@ private struct LockScreenLiveActivityView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+
+    // Apple Watch Smart Stack (`.small`). The system draws the app-name
+    // header above this, so lead with what's actually useful: which parcel,
+    // its current carrier status, and how far along it is.
+    private var watchView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
+                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+                Text(context.attributes.parcelTitle)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            Text(context.state.status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            DeliveryProgressBar(step: context.state.progressStep)
+                .padding(.top, 2)
+
+            Text(context.state.isDelivered ? "Delivered" : "In Transit")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
