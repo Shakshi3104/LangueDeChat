@@ -124,32 +124,59 @@ struct ParcelActivityContent: View {
     private var tint: Color { isDelivered ? .green : .accentColor }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: compact ? 4 : 6) {
-            HStack(alignment: .center, spacing: compact ? 4 : 6) {
+        if compact {
+            watchBody
+        } else {
+            phoneBody
+        }
+    }
+
+    /// iPhone Lock Screen: icon + title + tracking number, status, route.
+    private var phoneBody: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 6) {
                 Image(systemName: statusIcon)
                     .foregroundStyle(tint)
                 Text(title)
                     .font(.headline)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                if !compact {
-                    Spacer()
-                    Text(trackingNumber)
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.tertiary)
-                }
+                Spacer()
+                Text(trackingNumber)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.tertiary)
             }
 
             Text(status)
-                .font(compact ? .caption : .subheadline)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
             DeliveryRouteView(step: step, isDelivered: isDelivered)
-                .padding(.top, compact ? 0 : 2)
+                .padding(.top, 2)
         }
-        .padding(.horizontal, compact ? 10 : 16)
-        .padding(.vertical, compact ? 6 : 12)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    /// Apple Watch Smart Stack: no title — icon left, status top-right,
+    /// then a smaller route below.
+    private var watchBody: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: statusIcon)
+                    .foregroundStyle(tint)
+                Spacer()
+                Text(status)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            DeliveryRouteView(step: step, isDelivered: isDelivered, badge: 22)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
     }
 }
 
@@ -163,6 +190,8 @@ struct ParcelActivityContent: View {
 struct DeliveryRouteView: View {
     let step: Int
     var isDelivered: Bool = false
+    /// Node diameter; shrink it for the cramped Apple Watch layout.
+    var badge: CGFloat = 30
 
     private let totalSteps = 5
 
@@ -189,16 +218,16 @@ struct DeliveryRouteView: View {
                 }
             }
         }
-        .frame(height: 30)
+        .frame(height: badge)
     }
 
     private func nodeBadge(_ stop: Stop, isEnd: Bool) -> some View {
         let passed = progress >= stop.at - 0.001
         let icon = (isEnd && isDelivered) ? "checkmark.circle.fill" : stop.icon
         return Image(systemName: icon)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: badge * 0.43, weight: .semibold))
             .foregroundStyle(passed ? tint : Color.secondary)
-            .frame(width: 30, height: 30)
+            .frame(width: badge, height: badge)
             .background(Circle().fill(passed ? tint.opacity(0.15) : Color.secondary.opacity(0.12)))
             .overlay(Circle().strokeBorder(passed ? tint.opacity(0.5) : Color.clear, lineWidth: 1))
     }
