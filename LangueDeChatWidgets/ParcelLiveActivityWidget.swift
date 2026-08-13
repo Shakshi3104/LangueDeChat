@@ -34,50 +34,29 @@ struct ParcelLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "shippingbox.fill")
-                            .font(.title3)
-                            .foregroundStyle(Color.accentColor)
-                            .frame(width: 40, height: 40)
-                            .background(Color.accentColor.opacity(0.15), in: RoundedRectangle(cornerRadius: 11))
-                        Text(context.attributes.carrierName)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .padding(.leading, 2)
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.isDelivered ? "Delivered" : "In Transit")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
-                        .lineLimit(1)
-                        .fixedSize()
-                        .padding(.trailing, 2)
+                    Image(systemName: "shippingbox.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(context.state.status)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(context.attributes.carrierName)
+                                .font(.headline)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text(context.state.status)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
 
                         DeliveryRouteView(step: context.state.progressStep,
                                           isDelivered: context.state.isDelivered)
-
-                        HStack {
-                            Text(context.attributes.trackingNumber)
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(1)
-                            Spacer(minLength: 8)
-                            Text("Updated \(context.state.lastUpdated, style: .time)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
+                            .padding(.horizontal, 2)
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 4)
                 }
             } compactLeading: {
                 Image(systemName: deliveryStageIcon(step: context.state.progressStep,
@@ -96,49 +75,81 @@ struct ParcelLiveActivityWidget: Widget {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.green)
                 } else {
-                    DeliveryProgressRing(
-                        step: context.state.progressStep,
-                        lineWidth: 2.5,
-                        centerIcon: deliveryStageIcon(step: context.state.progressStep,
-                                                      isDelivered: false)
-                    )
-                    .frame(width: 18, height: 18)
+                    DeliveryProgressRing(step: context.state.progressStep, lineWidth: 2.5)
+                        .frame(width: 18, height: 18)
                 }
             }
         }
+        .supplementalActivityFamilies([.small])
     }
 }
 
 // MARK: - Lock Screen View
 
+/// Wraps the value-based `ParcelActivityContent` so the same title +
+/// status + route layout renders both on the iPhone Lock Screen
+/// (`.medium`) and in the Apple Watch Smart Stack (`.small`). The watch
+/// variant is a tighter version of the same design rather than a system
+/// fallback. Splitting the content out (below) also lets it be previewed
+/// without an `ActivityViewContext`.
 private struct LockScreenLiveActivityView: View {
     let context: ActivityViewContext<ParcelActivityAttributes>
+    @Environment(\.activityFamily) private var activityFamily
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center) {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
-                Text(context.attributes.parcelTitle)
+        ParcelActivityContent(
+            title: context.attributes.parcelTitle,
+            trackingNumber: context.attributes.trackingNumber,
+            status: context.state.status,
+            isDelivered: context.state.isDelivered,
+            step: context.state.progressStep,
+            compact: activityFamily == .small
+        )
+    }
+}
+
+/// The Lock Screen / Smart Stack body, driven by plain values so it can be
+/// exercised from `#Preview`. `compact` renders the Apple Watch layout.
+struct ParcelActivityContent: View {
+    let title: String
+    let trackingNumber: String
+    let status: String
+    let isDelivered: Bool
+    let step: Int
+    var compact: Bool = false
+
+    private var statusIcon: String {
+        isDelivered ? "checkmark.circle.fill" : "shippingbox.fill"
+    }
+    private var tint: Color { isDelivered ? .green : .accentColor }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: compact ? 4 : 6) {
+            HStack(alignment: .center, spacing: compact ? 4 : 6) {
+                Image(systemName: statusIcon)
+                    .foregroundStyle(tint)
+                Text(title)
                     .font(.headline)
                     .lineLimit(1)
-                Spacer()
-                Text(context.attributes.trackingNumber)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .minimumScaleFactor(0.8)
+                if !compact {
+                    Spacer()
+                    Text(trackingNumber)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.tertiary)
+                }
             }
 
-            Text(context.state.status)
-                .font(.subheadline)
+            Text(status)
+                .font(compact ? .caption : .subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            DeliveryRouteView(step: context.state.progressStep,
-                              isDelivered: context.state.isDelivered)
-                .padding(.top, 2)
+            DeliveryRouteView(step: step, isDelivered: isDelivered)
+                .padding(.top, compact ? 0 : 2)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, compact ? 10 : 16)
+        .padding(.vertical, compact ? 6 : 12)
     }
 }
 
@@ -244,12 +255,9 @@ func deliveryStageIcon(step: Int, isDelivered: Bool) -> String {
 /// Dynamic Island compact/minimal presentations and the Apple Watch Smart
 /// Stack. The ring fills as the parcel advances toward delivery, so the
 /// state reads as "how far along" instead of an ambiguous dotted circle.
-/// An optional `centerIcon` sits inside the ring so the minimal
-/// presentation can show both "how far" and "what stage" in one glyph.
 struct DeliveryProgressRing: View {
     let step: Int
     var lineWidth: CGFloat = 3
-    var centerIcon: String? = nil
 
     private let totalSteps = 5
 
@@ -267,11 +275,6 @@ struct DeliveryProgressRing: View {
                 .stroke(Color.accentColor,
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            if let centerIcon {
-                Image(systemName: centerIcon)
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
-            }
         }
         .padding(lineWidth / 2)
     }
@@ -279,9 +282,59 @@ struct DeliveryProgressRing: View {
 
 // MARK: - Previews
 
-#Preview("Lock Screen — In Transit", as: .content, using: ParcelActivityAttributes.preview) {
+#Preview("Lock Screen", as: .content, using: ParcelActivityAttributes.preview) {
     ParcelLiveActivityWidget()
 } contentStates: {
     ParcelActivityAttributes.ContentState.inTransit
     ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Expanded", as: .dynamicIsland(.expanded), using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Compact", as: .dynamicIsland(.compact), using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Minimal", as: .dynamicIsland(.minimal), using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+// Value-based previews so the Lock Screen (iPhone) and Smart Stack (Watch)
+// bodies render in the canvas without an ActivityViewContext.
+
+#Preview("iPhone — In Transit") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "持ち出し中", isDelivered: false, step: 3)
+        .background(Color(.systemBackground))
+}
+
+#Preview("iPhone — Delivered") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "配達完了", isDelivered: true, step: 4)
+        .background(Color(.systemBackground))
+}
+
+#Preview("Watch — In Transit") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "持ち出し中", isDelivered: false, step: 3, compact: true)
+        .frame(width: 184)
+        .background(Color(.systemBackground))
+}
+
+#Preview("Watch — Delivered") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "配達完了", isDelivered: true, step: 4, compact: true)
+        .frame(width: 184)
+        .background(Color(.systemBackground))
 }
