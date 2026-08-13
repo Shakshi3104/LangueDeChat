@@ -6,11 +6,10 @@
     {
       "layers" : [
         {
-          "fill" : {
-            "automatic-gradient" : "display-p3:0.09286,0.39526,0.86285,1.00000"
-          },
-          "image-name" : "langue-de-chat 2.svg",
-          "name" : "langue-de-chat"
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "langue-de-chat-v2 2.svg",
+          "name" : "langue-de-chat-v2 2"
         }
       ],
       "shadow" : {
