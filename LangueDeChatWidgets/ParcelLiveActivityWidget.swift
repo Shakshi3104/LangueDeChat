@@ -80,8 +80,9 @@ struct ParcelLiveActivityWidget: Widget {
                     .padding(.top, 6)
                 }
             } compactLeading: {
-                Image(systemName: "shippingbox.fill")
-                    .foregroundStyle(Color.accentColor)
+                Image(systemName: deliveryStageIcon(step: context.state.progressStep,
+                                                    isDelivered: context.state.isDelivered))
+                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
             } compactTrailing: {
                 if context.state.isDelivered {
                     Image(systemName: "checkmark.circle.fill")
@@ -95,8 +96,13 @@ struct ParcelLiveActivityWidget: Widget {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.green)
                 } else {
-                    DeliveryProgressRing(step: context.state.progressStep, lineWidth: 2.5)
-                        .frame(width: 18, height: 18)
+                    DeliveryProgressRing(
+                        step: context.state.progressStep,
+                        lineWidth: 2.5,
+                        centerIcon: deliveryStageIcon(step: context.state.progressStep,
+                                                      isDelivered: false)
+                    )
+                    .frame(width: 18, height: 18)
                 }
             }
         }
@@ -214,15 +220,36 @@ private struct TrackLine: Shape {
     }
 }
 
+// MARK: - Stage Icon
+
+/// The SF Symbol for a parcel's current stage, used wherever only a single
+/// glyph fits (Dynamic Island compact leading + minimal center). The icon
+/// changes as the parcel advances — packed → on a truck → at the local
+/// center → out for delivery → delivered — so the state reads at a glance
+/// without any text.
+func deliveryStageIcon(step: Int, isDelivered: Bool) -> String {
+    if isDelivered { return "checkmark.circle.fill" }
+    switch step {
+    case 0: return "shippingbox.fill"   // received / packed
+    case 1: return "box.truck.fill"     // in transit
+    case 2: return "storefront.fill"    // at hub / local center
+    case 3: return "box.truck.fill"     // out for delivery
+    default: return "shippingbox.fill"
+    }
+}
+
 // MARK: - Progress Ring
 
 /// Compact circular counterpart to `DeliveryRouteView`, used in the
 /// Dynamic Island compact/minimal presentations and the Apple Watch Smart
 /// Stack. The ring fills as the parcel advances toward delivery, so the
 /// state reads as "how far along" instead of an ambiguous dotted circle.
+/// An optional `centerIcon` sits inside the ring so the minimal
+/// presentation can show both "how far" and "what stage" in one glyph.
 struct DeliveryProgressRing: View {
     let step: Int
     var lineWidth: CGFloat = 3
+    var centerIcon: String? = nil
 
     private let totalSteps = 5
 
@@ -240,6 +267,11 @@ struct DeliveryProgressRing: View {
                 .stroke(Color.accentColor,
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            if let centerIcon {
+                Image(systemName: centerIcon)
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Color.accentColor)
+            }
         }
         .padding(lineWidth / 2)
     }
