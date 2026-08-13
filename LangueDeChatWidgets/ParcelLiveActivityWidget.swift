@@ -34,50 +34,29 @@ struct ParcelLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "shippingbox.fill")
-                            .font(.title3)
-                            .foregroundStyle(Color.accentColor)
-                            .frame(width: 40, height: 40)
-                            .background(Color.accentColor.opacity(0.15), in: RoundedRectangle(cornerRadius: 11))
-                        Text(context.attributes.carrierName)
-                            .font(.headline)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .padding(.leading, 2)
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.isDelivered ? "Delivered" : "In Transit")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
-                        .lineLimit(1)
-                        .fixedSize()
-                        .padding(.trailing, 2)
+                    Image(systemName: "shippingbox.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(context.state.status)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(context.attributes.carrierName)
+                                .font(.headline)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text(context.state.status)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
 
                         DeliveryRouteView(step: context.state.progressStep,
                                           isDelivered: context.state.isDelivered)
-
-                        HStack {
-                            Text(context.attributes.trackingNumber)
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(1)
-                            Spacer(minLength: 8)
-                            Text("Updated \(context.state.lastUpdated, style: .time)")
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                        }
+                            .padding(.horizontal, 2)
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 4)
                 }
             } compactLeading: {
                 Image(systemName: deliveryStageIcon(step: context.state.progressStep,
@@ -96,13 +75,8 @@ struct ParcelLiveActivityWidget: Widget {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.green)
                 } else {
-                    DeliveryProgressRing(
-                        step: context.state.progressStep,
-                        lineWidth: 2.5,
-                        centerIcon: deliveryStageIcon(step: context.state.progressStep,
-                                                      isDelivered: false)
-                    )
-                    .frame(width: 18, height: 18)
+                    DeliveryProgressRing(step: context.state.progressStep, lineWidth: 2.5)
+                        .frame(width: 18, height: 18)
                 }
             }
         }
@@ -244,12 +218,9 @@ func deliveryStageIcon(step: Int, isDelivered: Bool) -> String {
 /// Dynamic Island compact/minimal presentations and the Apple Watch Smart
 /// Stack. The ring fills as the parcel advances toward delivery, so the
 /// state reads as "how far along" instead of an ambiguous dotted circle.
-/// An optional `centerIcon` sits inside the ring so the minimal
-/// presentation can show both "how far" and "what stage" in one glyph.
 struct DeliveryProgressRing: View {
     let step: Int
     var lineWidth: CGFloat = 3
-    var centerIcon: String? = nil
 
     private let totalSteps = 5
 
@@ -267,11 +238,6 @@ struct DeliveryProgressRing: View {
                 .stroke(Color.accentColor,
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            if let centerIcon {
-                Image(systemName: centerIcon)
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
-            }
         }
         .padding(lineWidth / 2)
     }
@@ -279,7 +245,28 @@ struct DeliveryProgressRing: View {
 
 // MARK: - Previews
 
-#Preview("Lock Screen — In Transit", as: .content, using: ParcelActivityAttributes.preview) {
+#Preview("Lock Screen", as: .content, using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Expanded", as: .dynamicIsland(.expanded), using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Compact", as: .dynamicIsland(.compact), using: ParcelActivityAttributes.preview) {
+    ParcelLiveActivityWidget()
+} contentStates: {
+    ParcelActivityAttributes.ContentState.inTransit
+    ParcelActivityAttributes.ContentState.delivered
+}
+
+#Preview("DI — Minimal", as: .dynamicIsland(.minimal), using: ParcelActivityAttributes.preview) {
     ParcelLiveActivityWidget()
 } contentStates: {
     ParcelActivityAttributes.ContentState.inTransit
