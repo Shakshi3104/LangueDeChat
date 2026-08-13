@@ -15,6 +15,7 @@ struct ParcelListView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Query(sort: \TrackedParcel.addedAt, order: .reverse) private var parcels: [TrackedParcel]
     @State private var showingAdd = false
+    @State private var showingAbout = false
     @State private var isRefreshing = false
     @State private var filter: ParcelFilter = .all
 
@@ -76,6 +77,14 @@ struct ParcelListView: View {
                         : "line.3.horizontal.decrease.circle.fill")
                 }
             }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showingAbout = true
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .accessibilityLabel("About")
+            }
         }
         .navigationTitle("Deliveries")
         .navigationDestination(for: TrackedParcel.self) { parcel in
@@ -96,6 +105,9 @@ struct ParcelListView: View {
         }
         .sheet(isPresented: $showingAdd) {
             AddParcelView()
+        }
+        .sheet(isPresented: $showingAbout) {
+            AboutView()
         }
         .task {
             // Sync activities from cache first so a stale one is corrected
