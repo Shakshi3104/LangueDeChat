@@ -63,7 +63,8 @@ struct ParcelLiveActivityWidget: Widget {
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
 
-                        DeliveryProgressBar(step: context.state.progressStep)
+                        DeliveryRouteView(step: context.state.progressStep,
+                                          isDelivered: context.state.isDelivered)
 
                         HStack {
                             Text(context.attributes.trackingNumber)
@@ -126,7 +127,8 @@ private struct LockScreenLiveActivityView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            DeliveryProgressBar(step: context.state.progressStep)
+            DeliveryRouteView(step: context.state.progressStep,
+                              isDelivered: context.state.isDelivered)
                 .padding(.top, 2)
         }
         .padding(.horizontal, 16)
@@ -134,36 +136,87 @@ private struct LockScreenLiveActivityView: View {
     }
 }
 
-// MARK: - Progress Bar
+// MARK: - Delivery Route
 
-struct DeliveryProgressBar: View {
+/// Rocket Now–style route: three fixed node badges — origin depot
+/// (`building.2`) → store/center (`storefront`) → home (`house`) —
+/// joined by a track that fills as the parcel advances. The 5-stage
+/// `progressStep` maps onto the three stops at 0 / 0.5 / 1.0, so
+/// "out for delivery" sits just short of home and "delivered" arrives.
+struct DeliveryRouteView: View {
     let step: Int
+    var isDelivered: Bool = false
 
     private let totalSteps = 5
-    private let maxBarHeight: CGFloat = 10
 
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 3) {
-            ForEach(0..<totalSteps, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(i <= step ? activeColor : Color.secondary.opacity(0.2))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: barHeight(for: i))
-            }
-        }
-        .frame(height: maxBarHeight)
+    /// 0…1 position of the parcel along the whole route.
+    private var progress: CGFloat {
+        CGFloat(min(max(step, 0), totalSteps - 1)) / CGFloat(totalSteps - 1)
     }
 
-    private func barHeight(for index: Int) -> CGFloat { maxBarHeight }
+    private var tint: Color { isDelivered ? .green : .accentColor }
 
-    private var activeColor: Color {
-        step == totalSteps - 1 ? .green : .accentColor
+    private struct Stop { let at: CGFloat; let icon: String }
+    private let stops = [
+        Stop(at: 0.0, icon: "building.2.fill"),
+        Stop(at: 0.5, icon: "storefront.fill"),
+        Stop(at: 1.0, icon: "house.fill"),
+    ]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(stops.indices, id: \.self) { i in
+                nodeBadge(stops[i], isEnd: i == stops.count - 1)
+                if i < stops.count - 1 {
+                    segment(from: stops[i].at, to: stops[i + 1].at)
+                }
+            }
+        }
+        .frame(height: 30)
+    }
+
+    private func nodeBadge(_ stop: Stop, isEnd: Bool) -> some View {
+        let passed = progress >= stop.at - 0.001
+        let icon = (isEnd && isDelivered) ? "checkmark.circle.fill" : stop.icon
+        return Image(systemName: icon)
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(passed ? tint : Color.secondary)
+            .frame(width: 30, height: 30)
+            .background(Circle().fill(passed ? tint.opacity(0.15) : Color.secondary.opacity(0.12)))
+            .overlay(Circle().strokeBorder(passed ? tint.opacity(0.5) : Color.clear, lineWidth: 1))
+    }
+
+    private func segment(from: CGFloat, to: CGFloat) -> some View {
+        let fill = min(max((progress - from) / (to - from), 0), 1)
+        return ZStack(alignment: .leading) {
+            // Remaining route — dashed, like Rocket Now.
+            TrackLine()
+                .stroke(Color.secondary.opacity(0.35),
+                        style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [2, 4]))
+            // Completed route — solid fill.
+            GeometryReader { g in
+                Capsule().fill(tint).frame(width: g.size.width * fill)
+                    .frame(maxHeight: .infinity, alignment: .center)
+            }
+        }
+        .frame(height: 3)
+    }
+}
+
+/// A single horizontal line through the vertical center — the dashed
+/// backbone of `DeliveryRouteView`'s segments.
+private struct TrackLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: 0, y: rect.midY))
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        return p
     }
 }
 
 // MARK: - Progress Ring
 
-/// Compact circular counterpart to `DeliveryProgressBar`, used in the
+/// Compact circular counterpart to `DeliveryRouteView`, used in the
 /// Dynamic Island compact/minimal presentations and the Apple Watch Smart
 /// Stack. The ring fills as the parcel advances toward delivery, so the
 /// state reads as "how far along" instead of an ambiguous dotted circle.
