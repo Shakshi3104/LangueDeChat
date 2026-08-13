@@ -80,39 +80,76 @@ struct ParcelLiveActivityWidget: Widget {
                 }
             }
         }
+        .supplementalActivityFamilies([.small])
     }
 }
 
 // MARK: - Lock Screen View
 
+/// Wraps the value-based `ParcelActivityContent` so the same title +
+/// status + route layout renders both on the iPhone Lock Screen
+/// (`.medium`) and in the Apple Watch Smart Stack (`.small`). The watch
+/// variant is a tighter version of the same design rather than a system
+/// fallback. Splitting the content out (below) also lets it be previewed
+/// without an `ActivityViewContext`.
 private struct LockScreenLiveActivityView: View {
     let context: ActivityViewContext<ParcelActivityAttributes>
+    @Environment(\.activityFamily) private var activityFamily
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center) {
-                Image(systemName: context.state.isDelivered ? "checkmark.circle.fill" : "shippingbox.fill")
-                    .foregroundStyle(context.state.isDelivered ? Color.green : Color.accentColor)
-                Text(context.attributes.parcelTitle)
+        ParcelActivityContent(
+            title: context.attributes.parcelTitle,
+            trackingNumber: context.attributes.trackingNumber,
+            status: context.state.status,
+            isDelivered: context.state.isDelivered,
+            step: context.state.progressStep,
+            compact: activityFamily == .small
+        )
+    }
+}
+
+/// The Lock Screen / Smart Stack body, driven by plain values so it can be
+/// exercised from `#Preview`. `compact` renders the Apple Watch layout.
+struct ParcelActivityContent: View {
+    let title: String
+    let trackingNumber: String
+    let status: String
+    let isDelivered: Bool
+    let step: Int
+    var compact: Bool = false
+
+    private var statusIcon: String {
+        isDelivered ? "checkmark.circle.fill" : "shippingbox.fill"
+    }
+    private var tint: Color { isDelivered ? .green : .accentColor }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: compact ? 4 : 6) {
+            HStack(alignment: .center, spacing: compact ? 4 : 6) {
+                Image(systemName: statusIcon)
+                    .foregroundStyle(tint)
+                Text(title)
                     .font(.headline)
                     .lineLimit(1)
-                Spacer()
-                Text(context.attributes.trackingNumber)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(.tertiary)
+                    .minimumScaleFactor(0.8)
+                if !compact {
+                    Spacer()
+                    Text(trackingNumber)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.tertiary)
+                }
             }
 
-            Text(context.state.status)
-                .font(.subheadline)
+            Text(status)
+                .font(compact ? .caption : .subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            DeliveryRouteView(step: context.state.progressStep,
-                              isDelivered: context.state.isDelivered)
-                .padding(.top, 2)
+            DeliveryRouteView(step: step, isDelivered: isDelivered)
+                .padding(.top, compact ? 0 : 2)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, compact ? 10 : 16)
+        .padding(.vertical, compact ? 6 : 12)
     }
 }
 
@@ -271,4 +308,33 @@ struct DeliveryProgressRing: View {
 } contentStates: {
     ParcelActivityAttributes.ContentState.inTransit
     ParcelActivityAttributes.ContentState.delivered
+}
+
+// Value-based previews so the Lock Screen (iPhone) and Smart Stack (Watch)
+// bodies render in the canvas without an ActivityViewContext.
+
+#Preview("iPhone — In Transit") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "持ち出し中", isDelivered: false, step: 3)
+        .background(Color(.systemBackground))
+}
+
+#Preview("iPhone — Delivered") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "配達完了", isDelivered: true, step: 4)
+        .background(Color(.systemBackground))
+}
+
+#Preview("Watch — In Transit") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "持ち出し中", isDelivered: false, step: 3, compact: true)
+        .frame(width: 184)
+        .background(Color(.systemBackground))
+}
+
+#Preview("Watch — Delivered") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "配達完了", isDelivered: true, step: 4, compact: true)
+        .frame(width: 184)
+        .background(Color(.systemBackground))
 }
