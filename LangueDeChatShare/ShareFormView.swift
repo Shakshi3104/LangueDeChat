@@ -75,10 +75,10 @@ struct ShareFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
+                    Button("Cancel", systemImage: "xmark", action: onCancel)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button("Add", systemImage: "checkmark") {
                         // onAdd dismisses on success; a false result means the
                         // parcel is already tracked, so surface that instead.
                         alreadyTracked = !onAdd(carrier, trimmedNumber, nickname.isEmpty ? nil : nickname)
