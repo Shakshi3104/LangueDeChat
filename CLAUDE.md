@@ -62,6 +62,8 @@ A parcel can be registered from the share sheet (e.g. a tracking mail → Add). 
 
 ## Conventions
 
+- **Toolbar Cancel / Done / Save are glyphs, not words.** `Button("Cancel", systemImage: "xmark")`, `Button("Done", systemImage: "checkmark")` — a toolbar button given a `systemImage` renders icon-only on iOS and keeps its title as the accessibility label. Buttons inside an alert or confirmation dialog stay text. Shared across Monaka / yomy / Madeleine / LangueDeChat.
+
 These are not negotiable inside this repo — match them when adding new screens / strings:
 
 - **English UI.** Every user-facing string in this app is English, including `Carrier.displayName` (which lives in TsuiseKit). Carrier-returned data (`持ち出し中`, post office names, etc.) stays as-is since that's source data.

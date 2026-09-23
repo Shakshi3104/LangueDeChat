@@ -57,13 +57,13 @@ struct AddParcelView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if isAdding {
                         ProgressView()
                     } else {
-                        Button("Add") {
+                        Button("Add", systemImage: "checkmark") {
                             Task { await add() }
                         }
                         .disabled(trackingNumber.trimmingCharacters(in: .whitespaces).isEmpty)
