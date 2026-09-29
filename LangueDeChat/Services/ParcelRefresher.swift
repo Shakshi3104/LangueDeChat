@@ -17,10 +17,28 @@ final class ParcelRefresher {
         )
         parcel.updateCache(with: info)
 
-        if !isFirstFetch && parcel.currentStatus != oldStatus {
+        // Two refreshes of the same parcel can be in flight at once — the list
+        // refreshes everything on appear and foreground while the detail view
+        // refreshes its own parcel, and each view only guards against its own
+        // re-entry. Both then read the same pre-fetch `oldStatus`, so the
+        // status-changed test alone announced one transition twice.
+        //
+        // So the announcement is gated on what was last *notified*, which is
+        // persisted on the parcel: whichever refresh lands first claims the
+        // status and the other sees it already claimed. Claiming it is a single
+        // main-actor step with no `await` in between, so the two can't
+        // interleave — and because the record outlives the process, a status
+        // announced by the background task isn't announced again on next
+        // launch. Still requires an actual change, so the first refresh after
+        // this field appears seeds it silently rather than re-announcing.
+        let status = parcel.currentStatus
+        let alreadyNotified = parcel.lastNotifiedStatus == status
+        parcel.lastNotifiedStatus = status
+
+        if !isFirstFetch && status != oldStatus && !alreadyNotified {
             NotificationManager.shared.notifyStatusChange(
                 parcelTitle: parcel.titleText,
-                newStatus: parcel.currentStatus
+                newStatus: status
             )
         }
         await LiveActivityManager.shared.update(parcel)

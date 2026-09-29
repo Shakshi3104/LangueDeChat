@@ -21,10 +21,31 @@ enum SharedStore {
             .appending(path: fileName)
     }
 
-    /// Build a container backed by the App Group store. Falls back to the default
-    /// location if the container is unavailable, so the app still runs (in that
-    /// degraded case the app and extension simply don't share, as before).
+    private static let containerLock = NSLock()
+    private static var sharedContainer: ModelContainer?
+
+    /// The container backed by the App Group store, built once per process.
+    ///
+    /// Caching matters for correctness, not just cost: a second container over
+    /// the same file gets its own persistent store coordinator, and the two do
+    /// not merge each other's changes. The background refresh task used to
+    /// build one of its own, so after it refreshed a parcel the app's
+    /// long-lived container still held the pre-refresh row — and the next
+    /// foreground refresh read that stale status, treated the same transition
+    /// as new, and notified a second time.
     static func makeContainer() -> ModelContainer {
+        containerLock.lock()
+        defer { containerLock.unlock() }
+        if let sharedContainer { return sharedContainer }
+        let container = buildContainer()
+        sharedContainer = container
+        return container
+    }
+
+    /// Falls back to the default location if the App Group container is
+    /// unavailable, so the app still runs (in that degraded case the app and
+    /// extension simply don't share, as before).
+    private static func buildContainer() -> ModelContainer {
         if let storeURL {
             let config = ModelConfiguration(url: storeURL)
             if let container = try? ModelContainer(for: TrackedParcel.self, configurations: config) {
@@ -72,6 +93,7 @@ enum SharedStore {
             copy.addedAt = p.addedAt
             copy.lastRefreshedAt = p.lastRefreshedAt
             copy.cachedInfoData = p.cachedInfoData
+            copy.lastNotifiedStatus = p.lastNotifiedStatus
             newContext.insert(copy)
         }
         try? newContext.save()
