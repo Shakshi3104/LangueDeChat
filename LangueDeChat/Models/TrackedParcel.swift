@@ -29,6 +29,12 @@ final class TrackedParcel {
     // Cache the latest TrackingInfo as JSON so events don't need their own model.
     var cachedInfoData: Data?
 
+    // The status the user was last notified about, so one transition is never
+    // announced twice — see `ParcelRefresher.refresh(_:)`. Optional (and unset
+    // for parcels that predate it) so SwiftData migrates it automatically; the
+    // first refresh after the update seeds it without notifying.
+    var lastNotifiedStatus: String?
+
     init(
         trackingNumber: String,
         carrierRaw: String,

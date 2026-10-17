@@ -35,7 +35,7 @@ A single SwiftUI app target backed by SwiftData, using the TsuiseKit SPM package
 
 The persistent type. Stored properties:
 
-- `trackingNumber`, `carrierRaw` (raw value of `Carrier`), `nickname?`, `notes?`, `orderURL?`, `addedAt`, `lastRefreshedAt?`, `cachedInfoData?`.
+- `trackingNumber`, `carrierRaw` (raw value of `Carrier`), `nickname?`, `notes?`, `orderURL?`, `addedAt`, `lastRefreshedAt?`, `cachedInfoData?`, `lastNotifiedStatus?`.
 
 **The model is split across two files on purpose.** `TrackedParcel.swift` is the bare `@Model` — every stored property is a plain value type, **no `TsuiseKit` import**. Everything that interprets a parcel (`carrier`, `cachedInfo`, `isDelivered`, `progressStep`, the `Carrier`-typed convenience init, …) lives in `TrackedParcel+Tracking.swift`, which is app-only. This is what lets the share extension compile the same `@Model` into a **shared** SwiftData store without linking TsuiseKit (see "Share extension & shared store"). Keep TsuiseKit-dependent code out of the core file.
 
@@ -50,7 +50,7 @@ If you ever need to query events directly (e.g. "events in the last 24 hours" ac
 
 A parcel can be registered from the share sheet (e.g. a tracking mail → Add). The extension (`LangueDeChatShare/`) shows `ShareFormView` hosted in the sheet, then on Add **inserts a `TrackedParcel` straight into the shared SwiftData store** and finishes — there is no hand-off queue.
 
-- The store lives in the **App Group container** (`SharedStore.swift`, `group.com.shakshi.LangueDeChat`), so the app and the extension open **one** store. `SharedStore.makeContainer()` is the single source of the container for the app (`LangueDeChatApp`), background refresh, and the extension's insert.
+- The store lives in the **App Group container** (`SharedStore.swift`, `group.com.shakshi.LangueDeChat`), so the app and the extension open **one** store. `SharedStore.makeContainer()` is the single source of the container for the app (`LangueDeChatApp`), background refresh, and the extension's insert — and it **caches one container per process**. Don't make it build a fresh one: two containers over the same file get separate persistent store coordinators that never merge each other's changes, so the app would keep serving pre-refresh rows after the background task wrote new ones.
 - The app's `@Query` reads the extension's insert the next time it reads (launch / foreground). No queue, no drain, no `scenePhase` import trigger, no cfprefsd cross-process cache to race — those were the fragile parts of the old UserDefaults hand-off and are gone.
 - `TrackedParcel.swift` and `SharedStore.swift` are **duplicated verbatim** into `LangueDeChatShare/` because each synchronized folder belongs to a single target. Edit both copies together.
 - `SharedStore.migrateExistingStoreIfNeeded()` runs once in `LangueDeChatApp.init` to move a pre-App-Group store into the container. It copies rows through **live containers**, not by copying `.store` files — a force-quit app leaves recent writes in an un-checkpointed `-wal` that a raw file copy silently drops.
@@ -59,6 +59,10 @@ A parcel can be registered from the share sheet (e.g. a tracking mail → Add). 
 ### Refresh path
 
 `ParcelRefresher` is a `@MainActor` singleton that calls `TsuiseKit.fetch(carrier:trackingNumber:)`, writes the result back into `parcel.cachedInfoData`, and stamps `lastRefreshedAt`. `refreshAll(in:)` fans out via a `TaskGroup`. The list view runs it on `.task` and on pull-to-refresh; the detail view runs it on `.task` and via the menu.
+
+**Two refreshes of one parcel can overlap** — each view guards only its own re-entry (`isRefreshing` is per-view `@State`), so a list refresh and a detail refresh run concurrently, and both see the same pre-fetch status. That's why the status notification is gated on `lastNotifiedStatus` (persisted on the parcel) rather than on the pre/post comparison alone: whichever refresh lands first claims the status, in one main-actor step with no `await` inside. Keep any new user-visible side effect of a refresh idempotent the same way — don't reintroduce a "did it change?" test that reads state from before the `await`.
+
+`refreshAll(in:)` is also cancellation-aware because the background task cancels it on expiration; see `BackgroundRefreshManager` for why `setTaskCompleted` must not be called until the save has returned (`0xdead10cc`).
 
 ## Conventions
 
