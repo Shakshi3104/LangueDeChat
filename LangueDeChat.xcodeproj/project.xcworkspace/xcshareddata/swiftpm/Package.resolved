@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Shakshi3104/TsuiseKit.git",
       "state" : {
-        "revision" : "b6712b5e00fc9e19bd5e89317b53f5d02c7ef0b5",
-        "version" : "0.1.1"
+        "revision" : "5b7e205dc39ecce9737609c45e08f88b9e8ed4d6",
+        "version" : "0.2.0"
       }
     }
   ],
