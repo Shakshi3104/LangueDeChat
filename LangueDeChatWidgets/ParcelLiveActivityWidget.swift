@@ -118,10 +118,17 @@ struct ParcelActivityContent: View {
     let step: Int
     var compact: Bool = false
 
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     private var statusIcon: String {
         isDelivered ? "checkmark.circle.fill" : "shippingbox.fill"
     }
-    private var tint: Color { isDelivered ? .green : .accentColor }
+    /// Without colour (a tinted watch face, the vibrant Lock Screen) blue
+    /// and green both come out as a mid grey, so the icon goes white.
+    private var tint: Color {
+        guard renderingMode == .fullColor else { return .primary }
+        return isDelivered ? .green : .accentColor
+    }
 
     var body: some View {
         if compact {
@@ -166,6 +173,7 @@ struct ParcelActivityContent: View {
             HStack(spacing: 6) {
                 Image(systemName: statusIcon)
                     .foregroundStyle(tint)
+                    .widgetAccentable()
                 Spacer()
                 Text(status)
                     .font(.caption)
@@ -173,7 +181,7 @@ struct ParcelActivityContent: View {
                     .lineLimit(1)
             }
 
-            DeliveryRouteView(step: step, isDelivered: isDelivered, badge: 22)
+            DeliveryRouteView(step: step, isDelivered: isDelivered, badge: 22, trackWidth: 4)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
@@ -192,15 +200,33 @@ struct DeliveryRouteView: View {
     var isDelivered: Bool = false
     /// Node diameter; shrink it for the cramped Apple Watch layout.
     var badge: CGFloat = 30
+    /// Thickness of the filled track. The watch draws it thicker: the Smart
+    /// Stack is small and often seen at a glance from a wrist.
+    var trackWidth: CGFloat = 3
+
+    @Environment(\.widgetRenderingMode) private var renderingMode
 
     private let totalSteps = 5
+
+    /// Full colour tells done from to-do by hue — accent against grey. A
+    /// tinted watch face (and the vibrant Lock Screen) drops the hue and
+    /// keeps only brightness, where the accent-blue track turned into a
+    /// faint grey and the dashed remainder all but vanished. So without
+    /// colour the difference is carried by brightness instead: done is
+    /// white, still to go is a dimmer white, never a near-invisible grey.
+    private var isFullColor: Bool { renderingMode == .fullColor }
 
     /// 0…1 position of the parcel along the whole route.
     private var progress: CGFloat {
         CGFloat(min(max(step, 0), totalSteps - 1)) / CGFloat(totalSteps - 1)
     }
 
-    private var tint: Color { isDelivered ? .green : .accentColor }
+    private var tint: Color {
+        guard isFullColor else { return .primary }
+        return isDelivered ? .green : .accentColor
+    }
+    /// Stops not reached yet, and the dashed track ahead.
+    private var pending: Color { isFullColor ? .secondary : .primary.opacity(0.55) }
 
     private struct Stop { let at: CGFloat; let icon: String }
     private let stops = [
@@ -226,10 +252,13 @@ struct DeliveryRouteView: View {
         let icon = (isEnd && isDelivered) ? "checkmark.circle.fill" : stop.icon
         return Image(systemName: icon)
             .font(.system(size: badge * 0.43, weight: .semibold))
-            .foregroundStyle(passed ? tint : Color.secondary)
+            .foregroundStyle(passed ? tint : pending)
             .frame(width: badge, height: badge)
-            .background(Circle().fill(passed ? tint.opacity(0.15) : Color.secondary.opacity(0.12)))
-            .overlay(Circle().strokeBorder(passed ? tint.opacity(0.5) : Color.clear, lineWidth: 1))
+            .background(Circle().fill(passed ? tint.opacity(isFullColor ? 0.15 : 0.25)
+                                             : Color.secondary.opacity(isFullColor ? 0.12 : 0.2)))
+            .overlay(Circle().strokeBorder(passed ? tint.opacity(isFullColor ? 0.5 : 0.9) : Color.clear,
+                                           lineWidth: isFullColor ? 1 : 1.5))
+            .widgetAccentable(passed)
     }
 
     private func segment(from: CGFloat, to: CGFloat) -> some View {
@@ -237,15 +266,17 @@ struct DeliveryRouteView: View {
         return ZStack(alignment: .leading) {
             // Remaining route — dashed, like Rocket Now.
             TrackLine()
-                .stroke(Color.secondary.opacity(0.35),
-                        style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [2, 4]))
+                .stroke(isFullColor ? Color.secondary.opacity(0.35) : pending,
+                        style: StrokeStyle(lineWidth: isFullColor ? 2 : trackWidth * 0.6,
+                                           lineCap: .round, dash: [2, 4]))
             // Completed route — solid fill.
             GeometryReader { g in
                 Capsule().fill(tint).frame(width: g.size.width * fill)
                     .frame(maxHeight: .infinity, alignment: .center)
+                    .widgetAccentable()
             }
         }
-        .frame(height: 3)
+        .frame(height: trackWidth)
     }
 }
 
@@ -359,6 +390,14 @@ struct DeliveryProgressRing: View {
                           status: "持ち出し中", isDelivered: false, step: 3, compact: true)
         .frame(width: 184)
         .background(Color(.systemBackground))
+}
+
+#Preview("Watch — In Transit, tinted face") {
+    ParcelActivityContent(title: "Yamato Transport", trackingNumber: "1234567890123",
+                          status: "持ち出し中", isDelivered: false, step: 3, compact: true)
+        .frame(width: 184)
+        .environment(\.widgetRenderingMode, .vibrant)
+        .background(Color.black)
 }
 
 #Preview("Watch — Delivered") {
