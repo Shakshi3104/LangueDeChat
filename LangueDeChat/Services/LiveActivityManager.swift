@@ -80,8 +80,9 @@ final class LiveActivityManager {
     }
 
     /// Pushes `parcel`'s current cached state onto `activity`: delivered parcels
-    /// end the activity (with a 1h dismissal window) and in-progress ones update
-    /// in place. Shared by `update(_:)` (after a fetch) and `reconcile(with:)`
+    /// end the activity and leave "Delivered" up for 10 minutes — long enough
+    /// to see it land, short enough not to clutter the Lock Screen — and in-progress
+    /// ones update in place. Shared by `update(_:)` (after a fetch) and `reconcile(with:)`
     /// (from cache on foreground) so the two paths can't drift apart.
     private func sync(_ activity: Activity<ParcelActivityAttributes>, to parcel: TrackedParcel) async {
         let state = ParcelActivityAttributes.ContentState(
@@ -93,7 +94,7 @@ final class LiveActivityManager {
         let content = ActivityContent(state: state, staleDate: nil)
 
         if parcel.isDelivered {
-            await activity.end(content, dismissalPolicy: .after(Date().addingTimeInterval(3600)))
+            await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(10 * 60)))
         } else {
             await activity.update(content)
         }
