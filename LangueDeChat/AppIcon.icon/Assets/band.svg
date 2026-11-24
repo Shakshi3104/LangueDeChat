@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg"><defs>
+<linearGradient id="base" x1="0" y1="460" x2="0" y2="564" gradientUnits="userSpaceOnUse">
+ <stop offset="0" stop-color="#E2AD62"/><stop offset="0.1" stop-color="#F7D598"/><stop offset="0.26" stop-color="#FFEECB"/>
+ <stop offset="0.5" stop-color="#F6CE85"/><stop offset="0.8" stop-color="#E3A65A"/><stop offset="1" stop-color="#CB8B40"/>
+</linearGradient>
+<linearGradient id="ends" x1="135" y1="0" x2="916.84" y2="0" gradientUnits="userSpaceOnUse">
+ <stop offset="0" stop-color="#9A5414" stop-opacity="0.22"/><stop offset="0.12" stop-color="#9A5414" stop-opacity="0"/>
+ <stop offset="0.88" stop-color="#9A5414" stop-opacity="0"/><stop offset="1" stop-color="#9A5414" stop-opacity="0.22"/>
+</linearGradient>
+<linearGradient id="band" x1="0" y1="460" x2="0" y2="564" gradientUnits="userSpaceOnUse">
+ <stop offset="0" stop-color="#2F9BEE"/><stop offset="0.26" stop-color="#5CB8FA"/><stop offset="0.55" stop-color="#1E8BE6"/><stop offset="1" stop-color="#0E63B8"/>
+</linearGradient>
+<radialGradient id="hollow" cx="0.7" cy="0.72" r="0.85">
+ <stop offset="0" stop-color="#B9772F"/><stop offset="0.45" stop-color="#6E3A10"/><stop offset="1" stop-color="#3A1A04"/>
+</radialGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#46B6FF"/><stop offset="1" stop-color="#1C6FEA"/></linearGradient>
+<clipPath id="tube"><rect x="135" y="460" width="760" height="104"/><ellipse cx="895" cy="512" rx="21.84" ry="52"/></clipPath>
+<filter id="b1" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter>
+<filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+</defs><g transform="rotate(-45 512 512)"><g clip-path="url(#tube)"><path d="M505,460 A21.84,52 0 0 0 505,564 L575,564 A21.84,52 0 0 1 575,460 Z" fill="url(#band)"/>
+<path d="M514,460 A21.84,52 0 0 0 514,564" stroke="#FFFFFF" stroke-width="3.5"/><path d="M566,460 A21.84,52 0 0 0 566,564" stroke="#FFFFFF" stroke-width="3.5"/></g></g></svg>
