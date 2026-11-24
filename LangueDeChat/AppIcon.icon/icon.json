@@ -1,6 +1,9 @@
 {
   "fill" : {
-    "solid" : "display-p3:0.99825,0.98361,0.80609,1.00000"
+    "linear-gradient" : [
+      "srgb:0.27451,0.71373,1.00000,1.00000",
+      "srgb:0.10980,0.43529,0.91765,1.00000"
+    ]
   },
   "groups" : [
     {
@@ -8,8 +11,26 @@
         {
           "glass" : false,
           "hidden" : false,
-          "image-name" : "langue-de-chat-v2 2.svg",
-          "name" : "langue-de-chat-v2 2"
+          "image-name" : "band.svg",
+          "name" : "band"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "cigare.svg",
+          "name" : "cigare"
         }
       ],
       "shadow" : {
