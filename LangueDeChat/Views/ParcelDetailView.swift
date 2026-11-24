@@ -30,10 +30,7 @@ struct ParcelDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
-                    guard let url = trackingURL else { return }
-                    // Sagawa's tracking site can't take the number in the URL; have it ready to paste.
-                    if parcel.carrier == .sagawa { UIPasteboard.general.string = parcel.trackingNumber }
-                    safariURL = IdentifiableURL(url)
+                    if let url = trackingURL { safariURL = IdentifiableURL(url) }
                 } label: {
                     Image(systemName: "safari")
                 }
@@ -199,7 +196,7 @@ struct ParcelDetailView: View {
         case .yamato:
             URL(string: "https://member.kms.kuronekoyamato.co.jp/parcel/detail?pno=\(parcel.trackingNumber)")
         case .sagawa:
-            URL(string: "https://e-customer.sagawa-exp.co.jp/k2k")
+            URL(string: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=\(parcel.trackingNumber)")
         }
     }
 
